@@ -1,0 +1,256 @@
+# Translations template for APPLICATION.
+# Copyright (C) 2025 AUTHOR NAME <author@example.com>
+# This file is distributed under the same license as the APPLICATION project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: APPLICATION 1.0\n"
+"Report-Msgid-Bugs-To: Translator Name <translator@example.com>\n"
+"POT-Creation-Date: 2025-10-27 18:18-0400\n"
+"PO-Revision-Date: 2025-10-27 18:18-0400\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: main.py:26 main.py:161
+msgid "Add Application"
+msgstr ""
+
+#: main.py:26 main.py:165
+msgid "Edit Application"
+msgstr ""
+
+#: main.py:33
+msgid "Application Name:"
+msgstr ""
+
+#: main.py:38
+msgid "Service Name:"
+msgstr ""
+
+#: main.py:43
+msgid "App Identifier:"
+msgstr ""
+
+#: main.py:49
+msgid "Cache Location:"
+msgstr ""
+
+#: main.py:52
+msgid "Browse..."
+msgstr ""
+
+#: main.py:59
+msgid "OK"
+msgstr ""
+
+#: main.py:61
+msgid "Cancel"
+msgstr ""
+
+#: main.py:80
+msgid "Select Cache File"
+msgstr ""
+
+#: main.py:82
+msgid "Encrypted Files (*.enc);;All Files (*)"
+msgstr ""
+
+#: main.py:102
+msgid "Cache Manager"
+msgstr ""
+
+#: main.py:127
+msgid "Applications:"
+msgstr ""
+
+#: main.py:132
+msgid "Application"
+msgstr ""
+
+#: main.py:132
+msgid "Cache Location"
+msgstr ""
+
+#: main.py:132
+msgid "Last Backup"
+msgstr ""
+
+#: main.py:132
+msgid "Size"
+msgstr ""
+
+#: main.py:142
+msgid "Create Backup"
+msgstr ""
+
+#: main.py:148
+msgid "Inspect Cache"
+msgstr ""
+
+#: main.py:150
+msgid "TODO: Implement cache property inspection"
+msgstr ""
+
+#: main.py:153
+msgid "Modify Cache"
+msgstr ""
+
+#: main.py:155
+msgid "TODO: Implement cache property modification"
+msgstr ""
+
+#: main.py:169
+msgid "Remove Application"
+msgstr ""
+
+#: main.py:173
+msgid "Refresh"
+msgstr ""
+
+#: main.py:201
+msgid "Never"
+msgstr ""
+
+#: main.py:218
+msgid "Not found"
+msgstr ""
+
+#: main.py:230
+msgid "Error"
+msgstr ""
+
+#: main.py:239 main.py:288 main.py:313
+msgid "No Selection"
+msgstr ""
+
+#: main.py:239
+msgid "Please select an application to backup."
+msgstr ""
+
+#: main.py:255
+msgid "Backup Successful"
+msgstr ""
+
+#: main.py:256
+msgid ""
+"Backup created for: {0}\n"
+"\n"
+"Location: {1}"
+msgstr ""
+
+#: main.py:261
+msgid "Backup Failed"
+msgstr ""
+
+#: main.py:262
+msgid ""
+"Failed to create backup for: {}\n"
+"\n"
+"Make sure the cache file exists and is accessible."
+msgstr ""
+
+#: main.py:275 main.py:300
+msgid "Invalid Input"
+msgstr ""
+
+#: main.py:275 main.py:300
+msgid "All fields are required."
+msgstr ""
+
+#: main.py:288
+msgid "Please select an application to edit."
+msgstr ""
+
+#: main.py:313
+msgid "Please select an application to remove."
+msgstr ""
+
+#: main.py:318
+msgid "Confirm Removal"
+msgstr ""
+
+#: main.py:319
+msgid "Are you sure you want to remove the selected application?"
+msgstr ""
+
+#: cache_manager/cache_backup_manager.py:45
+msgid "Backup verification failed: {0}. Removing failed backup file."
+msgstr ""
+
+#: cache_manager/cache_backup_manager.py:54
+msgid "Error creating backup: {}"
+msgstr ""
+
+#: cache_manager/cache_backup_manager.py:93 cache_manager/cache_backup_manager.py:109
+msgid "Error reading backup metadata: {}"
+msgstr ""
+
+#: utils/app_info_cache.py:35
+msgid "Error storing cache: {}"
+msgstr ""
+
+#: utils/app_info_cache.py:52
+msgid "Error loading cache: {}"
+msgstr ""
+
+#: utils/translations.py:37
+msgid "Monday"
+msgstr ""
+
+#: utils/translations.py:39
+msgid "Tuesday"
+msgstr ""
+
+#: utils/translations.py:41
+msgid "Wednesday"
+msgstr ""
+
+#: utils/translations.py:43
+msgid "Thursday"
+msgstr ""
+
+#: utils/translations.py:45
+msgid "Friday"
+msgstr ""
+
+#: utils/translations.py:47
+msgid "Saturday"
+msgstr ""
+
+#: utils/translations.py:49
+msgid "Sunday"
+msgstr ""
+
+#: utils/translations.py:61
+msgid "seconds"
+msgstr ""
+
+#: utils/translations.py:63
+msgid "minutes"
+msgstr ""
+
+#: utils/translations.py:65
+msgid "hours"
+msgstr ""
+
+#: utils/translations.py:67
+msgid "days"
+msgstr ""
+
+#: utils/translations.py:69
+msgid "weeks"
+msgstr ""
+
+#: utils/translations.py:71
+msgid "months"
+msgstr ""
+
+#: utils/translations.py:73
+msgid "years"
+msgstr ""
+

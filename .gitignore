@@ -1,0 +1,9 @@
+configs/config.json
+*.pyc
+__pycache__/
+*.log
+.DS_Store
+.vscode/
+.idea/
+backups/
+app_info_cache.enc

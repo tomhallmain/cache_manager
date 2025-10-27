@@ -1,0 +1,258 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"POT-Creation-Date: 2025-10-27 18:19-0400\n"
+"PO-Revision-Date: 2025-10-27 18:19-0400\n"
+"Last-Translator: Translator Name <translator@example.com>\n"
+"Language-Team: en Team <<EMAIL>>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: main.py:26 main.py:161
+msgid "Add Application"
+msgstr "Add Application"
+
+#: main.py:26 main.py:165
+msgid "Edit Application"
+msgstr "Edit Application"
+
+#: main.py:33
+msgid "Application Name:"
+msgstr "Application Name:"
+
+#: main.py:38
+msgid "Service Name:"
+msgstr "Service Name:"
+
+#: main.py:43
+msgid "App Identifier:"
+msgstr "App Identifier:"
+
+#: main.py:49
+msgid "Cache Location:"
+msgstr "Cache Location:"
+
+#: main.py:52
+msgid "Browse..."
+msgstr "Browse..."
+
+#: main.py:59
+msgid "OK"
+msgstr "OK"
+
+#: main.py:61
+msgid "Cancel"
+msgstr "Cancel"
+
+#: main.py:80
+msgid "Select Cache File"
+msgstr "Select Cache File"
+
+#: main.py:82
+msgid "Encrypted Files (*.enc);;All Files (*)"
+msgstr "Encrypted Files (*.enc);;All Files (*)"
+
+#: main.py:102
+msgid "Cache Manager"
+msgstr "Cache Manager"
+
+#: main.py:127
+msgid "Applications:"
+msgstr "Applications:"
+
+#: main.py:132
+msgid "Application"
+msgstr "Application"
+
+#: main.py:132
+msgid "Cache Location"
+msgstr "Cache Location"
+
+#: main.py:132
+msgid "Last Backup"
+msgstr "Last Backup"
+
+#: main.py:132
+msgid "Size"
+msgstr "Size"
+
+#: main.py:142
+msgid "Create Backup"
+msgstr "Create Backup"
+
+#: main.py:148
+msgid "Inspect Cache"
+msgstr "Inspect Cache"
+
+#: main.py:150
+msgid "TODO: Implement cache property inspection"
+msgstr "TODO: Implement cache property inspection"
+
+#: main.py:153
+msgid "Modify Cache"
+msgstr "Modify Cache"
+
+#: main.py:155
+msgid "TODO: Implement cache property modification"
+msgstr "TODO: Implement cache property modification"
+
+#: main.py:169
+msgid "Remove Application"
+msgstr "Remove Application"
+
+#: main.py:173
+msgid "Refresh"
+msgstr "Refresh"
+
+#: main.py:201
+msgid "Never"
+msgstr "Never"
+
+#: main.py:218
+msgid "Not found"
+msgstr "Not found"
+
+#: main.py:230
+msgid "Error"
+msgstr "Error"
+
+#: main.py:239 main.py:288 main.py:313
+msgid "No Selection"
+msgstr "No Selection"
+
+#: main.py:239
+msgid "Please select an application to backup."
+msgstr "Please select an application to backup."
+
+#: main.py:255
+msgid "Backup Successful"
+msgstr "Backup Successful"
+
+#: main.py:256
+msgid ""
+"Backup created for: {0}\n"
+"\n"
+"Location: {1}"
+msgstr ""
+"Backup created for: {0}\n"
+"\n"
+"Location: {1}"
+
+#: main.py:261
+msgid "Backup Failed"
+msgstr "Backup Failed"
+
+#: main.py:262
+msgid ""
+"Failed to create backup for: {}\n"
+"\n"
+"Make sure the cache file exists and is accessible."
+msgstr ""
+"Failed to create backup for: {}\n"
+"\n"
+"Make sure the cache file exists and is accessible."
+
+#: main.py:275 main.py:300
+msgid "Invalid Input"
+msgstr "Invalid Input"
+
+#: main.py:275 main.py:300
+msgid "All fields are required."
+msgstr "All fields are required."
+
+#: main.py:288
+msgid "Please select an application to edit."
+msgstr "Please select an application to edit."
+
+#: main.py:313
+msgid "Please select an application to remove."
+msgstr "Please select an application to remove."
+
+#: main.py:318
+msgid "Confirm Removal"
+msgstr "Confirm Removal"
+
+#: main.py:319
+msgid "Are you sure you want to remove the selected application?"
+msgstr "Are you sure you want to remove the selected application?"
+
+#: cache_manager/cache_backup_manager.py:45
+msgid "Backup verification failed: {0}. Removing failed backup file."
+msgstr "Backup verification failed: {0}. Removing failed backup file."
+
+#: cache_manager/cache_backup_manager.py:54
+msgid "Error creating backup: {}"
+msgstr "Error creating backup: {}"
+
+#: cache_manager/cache_backup_manager.py:93
+#: cache_manager/cache_backup_manager.py:109
+msgid "Error reading backup metadata: {}"
+msgstr "Error reading backup metadata: {}"
+
+#: utils/app_info_cache.py:35
+msgid "Error storing cache: {}"
+msgstr "Error storing cache: {}"
+
+#: utils/app_info_cache.py:52
+msgid "Error loading cache: {}"
+msgstr "Error loading cache: {}"
+
+#: utils/translations.py:37
+msgid "Monday"
+msgstr "Monday"
+
+#: utils/translations.py:39
+msgid "Tuesday"
+msgstr "Tuesday"
+
+#: utils/translations.py:41
+msgid "Wednesday"
+msgstr "Wednesday"
+
+#: utils/translations.py:43
+msgid "Thursday"
+msgstr "Thursday"
+
+#: utils/translations.py:45
+msgid "Friday"
+msgstr "Friday"
+
+#: utils/translations.py:47
+msgid "Saturday"
+msgstr "Saturday"
+
+#: utils/translations.py:49
+msgid "Sunday"
+msgstr "Sunday"
+
+#: utils/translations.py:61
+msgid "seconds"
+msgstr "seconds"
+
+#: utils/translations.py:63
+msgid "minutes"
+msgstr "minutes"
+
+#: utils/translations.py:65
+msgid "hours"
+msgstr "hours"
+
+#: utils/translations.py:67
+msgid "days"
+msgstr "days"
+
+#: utils/translations.py:69
+msgid "weeks"
+msgstr "weeks"
+
+#: utils/translations.py:71
+msgid "months"
+msgstr "months"
+
+#: utils/translations.py:73
+msgid "years"
+msgstr "years"

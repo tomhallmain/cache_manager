@@ -1,0 +1,17 @@
+{
+  "applications": [
+    {
+      "name": "Application Name 1",
+      "service_name": "ServiceName1",
+      "app_identifier": "main_app",
+      "cache_location": "C:\\path\\to\\app1_cache.enc"
+    },
+    {
+      "name": "Application Name 2",
+      "service_name": "ServiceName2",
+      "app_identifier": "main_app",
+      "cache_location": "C:\\path\\to\\app2_cache.enc"
+    }
+  ]
+}
+
