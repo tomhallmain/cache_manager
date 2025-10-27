@@ -13,9 +13,16 @@ logger = get_logger(__name__)
 _ = I18N._
 
 
+def sanitize_filename(name: str) -> str:
+    """Convert application name to a filesystem-friendly filename"""
+    # Convert to lowercase, replace spaces with underscores
+    return name.lower().replace(' ', '_')
+
+
 class CacheBackupManager:
-    def __init__(self):
+    def __init__(self, max_backups_per_app: int = 10):
         self.backup_dir = "backups"
+        self.max_backups_per_app = max_backups_per_app
         os.makedirs(self.backup_dir, exist_ok=True)
     
     def create_backup(self, app_name: str, cache_location: str, service_name: str, app_identifier: str) -> Optional[str]:
@@ -31,7 +38,8 @@ class CacheBackupManager:
         try:
             # Create timestamp for backup filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_filename = f"{app_name}_{timestamp}.enc"
+            safe_name = sanitize_filename(app_name)
+            backup_filename = f"{safe_name}_{timestamp}.enc"
             backup_path = os.path.join(self.backup_dir, backup_filename)
             
             # Copy the cache file
@@ -49,6 +57,9 @@ class CacheBackupManager:
             # Store metadata about this backup
             self._save_backup_metadata(app_name, backup_path)
             
+            # Clean up old backups if we exceed the limit
+            self._cleanup_old_backups(app_name)
+            
             return backup_path
         except Exception as e:
             logger.error(_("Error creating backup: {}".format(str(e))))
@@ -56,7 +67,8 @@ class CacheBackupManager:
     
     def _save_backup_metadata(self, app_name: str, backup_path: str):
         """Save metadata about when the backup was created"""
-        metadata_file = os.path.join(self.backup_dir, f"{app_name}_backups.json")
+        safe_name = sanitize_filename(app_name)
+        metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
         
         if os.path.exists(metadata_file):
             with open(metadata_file, 'r') as f:
@@ -74,7 +86,8 @@ class CacheBackupManager:
     
     def get_last_backup_time(self, app_name: str) -> Optional[datetime]:
         """Get the timestamp of the last backup for an application"""
-        metadata_file = os.path.join(self.backup_dir, f"{app_name}_backups.json")
+        safe_name = sanitize_filename(app_name)
+        metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
         
         if not os.path.exists(metadata_file):
             return None
@@ -95,7 +108,8 @@ class CacheBackupManager:
     
     def list_backups(self, app_name: str) -> list:
         """List all backups for an application"""
-        metadata_file = os.path.join(self.backup_dir, f"{app_name}_backups.json")
+        safe_name = sanitize_filename(app_name)
+        metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
         
         if not os.path.exists(metadata_file):
             return []
@@ -108,4 +122,39 @@ class CacheBackupManager:
         except Exception as e:
             logger.error(_("Error reading backup metadata: {}".format(str(e))))
             return []
+    
+    def _cleanup_old_backups(self, app_name: str):
+        """Remove old backups if we exceed the maximum count"""
+        backups = self.list_backups(app_name)
+        
+        if len(backups) <= self.max_backups_per_app:
+            return
+        
+        # Sort backups by timestamp (oldest first)
+        backups_sorted = sorted(backups, key=lambda x: x['timestamp'])
+        
+        # Keep only the most recent backups
+        backups_to_keep = backups_sorted[-self.max_backups_per_app:]
+        backups_to_remove = backups_sorted[:-self.max_backups_per_app]
+        
+        # Remove old backup files
+        for backup in backups_to_remove:
+            backup_path = backup.get('path')
+            if backup_path and os.path.exists(backup_path):
+                try:
+                    os.remove(backup_path)
+                    logger.info(_("Removed old backup: {}".format(backup_path)))
+                except Exception as e:
+                    logger.error(_("Error removing old backup: {}".format(str(e))))
+        
+        # Update metadata file to reflect only the kept backups
+        safe_name = sanitize_filename(app_name)
+        metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
+        
+        try:
+            metadata = {'backups': backups_to_keep}
+            with open(metadata_file, 'w') as f:
+                json.dump(metadata, f, indent=2)
+        except Exception as e:
+            logger.error(_("Error updating backup metadata: {}".format(str(e))))
 
