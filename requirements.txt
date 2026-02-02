@@ -2,6 +2,8 @@ PySide6>=6.6.0
 keyring>=24.0.0
 cryptography>=41.0.0
 
-# Optional: For quantum encryption support
-# oqs-python>=0.8.0
+# OQS (post-quantum) key encapsulation for utils/encryptor.py PersonalQuantumEncryptor.
+# Install from GitHub; liboqs C library must be installed first (or is auto-installed at runtime).
+# Full instructions: https://github.com/open-quantum-safe/liboqs-python/blob/main/README.md
+git+https://github.com/open-quantum-safe/liboqs-python.git
 

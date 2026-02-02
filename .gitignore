@@ -1,9 +1,37 @@
-configs/config.json
-*.pyc
+# Python
 __pycache__/
-*.log
-.DS_Store
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local config and secrets
+configs/config.json
+
+# IDE / editor
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.tmp
+
+# Project-specific
 backups/
-app_info_cache.enc
+app_info_cache.json*
+app_info_cache.enc*
