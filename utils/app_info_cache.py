@@ -2,6 +2,7 @@ import json
 import os
 from typing import List, Dict
 
+from utils.globals import AppInfo
 from utils.encryptor import encrypt_data_to_file, decrypt_data_from_file
 from utils.encryptor import KeyEncapsulation
 from utils.encryption_strategy import EncryptionStrategy
@@ -11,9 +12,6 @@ from utils.translations import I18N
 logger = get_logger(__name__)
 _ = I18N._
 
-# Service and app identifiers for this cache manager application
-SERVICE_NAME = "MyPersonalApplicationsService"
-APP_IDENTIFIER = "cache_manager"
 
 
 class AppInfoCache:
@@ -30,8 +28,8 @@ class AppInfoCache:
             cache_data = json.dumps(self._cache).encode('utf-8')
             encrypt_data_to_file(
                 cache_data,
-                SERVICE_NAME,
-                APP_IDENTIFIER,
+                AppInfo.SERVICE_NAME,
+                AppInfo.APP_IDENTIFIER,
                 self.CACHE_LOC
             )
         except Exception as e:
@@ -44,8 +42,8 @@ class AppInfoCache:
             if os.path.exists(self.CACHE_LOC):
                 encrypted_data = decrypt_data_from_file(
                     self.CACHE_LOC,
-                    SERVICE_NAME,
-                    APP_IDENTIFIER
+                    AppInfo.SERVICE_NAME,
+                    AppInfo.APP_IDENTIFIER
                 )
                 self._cache = json.loads(encrypted_data.decode('utf-8'))
             else:
@@ -99,7 +97,7 @@ class AppInfoCache:
         
         # Check if already exists
         for app in self._cache['applications']:
-            if app.get('service_name') == SERVICE_NAME and app.get('app_identifier') == APP_IDENTIFIER:
+            if app.get('service_name') == AppInfo.SERVICE_NAME and app.get('app_identifier') == AppInfo.APP_IDENTIFIER:
                 return  # Already exists
         
         # Add this cache manager to the list
@@ -111,8 +109,8 @@ class AppInfoCache:
         
         self._cache['applications'].append({
             'name': 'Cache Manager',
-            'service_name': SERVICE_NAME,
-            'app_identifier': APP_IDENTIFIER,
+            'service_name': AppInfo.SERVICE_NAME,
+            'app_identifier': AppInfo.APP_IDENTIFIER,
             'cache_location': self.CACHE_LOC,
             'encryption_strategy': strategy
         })
