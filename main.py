@@ -147,8 +147,8 @@ class CacheManagerWindow(QMainWindow):
         layout.addWidget(apps_label)
         
         self.apps_table = QTableWidget()
-        self.apps_table.setColumnCount(5)
-        self.apps_table.setHorizontalHeaderLabels([_("Application"), _("Cache Location"), _("Last Backup"), _("Size"), _("Encryption")])
+        self.apps_table.setColumnCount(7)
+        self.apps_table.setHorizontalHeaderLabels([_("Application"), _("Cache Location"), _("Cache Updated"), _("Last Accessed"), _("Last Backup"), _("Size"), _("Encryption")])
         self.apps_table.horizontalHeader().setStretchLastSection(True)
         self.apps_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.apps_table.cellDoubleClicked.connect(self.on_app_double_clicked)
@@ -203,7 +203,7 @@ class CacheManagerWindow(QMainWindow):
         central_widget.setLayout(layout)
     
     def refresh_applications(self):
-        """Refresh the applications list"""
+        """Refresh the applications list from disk and update the table."""
         apps = self.config_manager.get_applications()
         
         self.apps_table.setRowCount(len(apps))
@@ -217,33 +217,85 @@ class CacheManagerWindow(QMainWindow):
             location_item.setToolTip(app['cache_location'])
             self.apps_table.setItem(i, 1, location_item)
             
+            # Cache updated (most recent mtime of project cache: .enc or .json)
+            cache_updated = self.get_cache_last_modified(app['cache_location'])
+            if cache_updated:
+                cache_updated_text = cache_updated.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                cache_updated_text = _("Not found")
+            self.apps_table.setItem(i, 2, QTableWidgetItem(cache_updated_text))
+            
+            # Last accessed (most recent atime of project cache: .enc or .json)
+            last_accessed = self.get_cache_last_accessed(app['cache_location'])
+            if last_accessed:
+                last_accessed_text = last_accessed.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                last_accessed_text = _("Not found")
+            self.apps_table.setItem(i, 3, QTableWidgetItem(last_accessed_text))
+            
             # Last backup
             last_backup = self.backup_manager.get_last_backup_time(app['name'])
             if last_backup:
                 backup_text = last_backup.strftime("%Y-%m-%d %H:%M:%S")
             else:
                 backup_text = _("Never")
-            self.apps_table.setItem(i, 2, QTableWidgetItem(backup_text))
+            self.apps_table.setItem(i, 4, QTableWidgetItem(backup_text))
             
             # Cache size
             cache_size = self.get_cache_size(app['cache_location'])
-            self.apps_table.setItem(i, 3, QTableWidgetItem(cache_size))
+            self.apps_table.setItem(i, 5, QTableWidgetItem(cache_size))
             
             # Encryption strategy
             encryption_strategy = app.get('encryption_strategy', EncryptionStrategy.UNKNOWN.value)
             strategy_enum = EncryptionStrategy.from_string(encryption_strategy)
             strategy_display = strategy_enum.display_value(_)
-            self.apps_table.setItem(i, 4, QTableWidgetItem(strategy_display))
+            self.apps_table.setItem(i, 6, QTableWidgetItem(strategy_display))
         
         self.apps_table.resizeColumnsToContents()
         
         # Enable/disable backup button based on selection
         self.backup_btn.setEnabled(len(self.apps_table.selectedItems()) > 0)
     
+    def _get_cache_paths(self, cache_location):
+        """Yield paths to check for cache file(s): the configured path and, if .enc, also app_info_cache.json in same dir."""
+        if os.path.exists(cache_location):
+            yield cache_location
+        if cache_location.endswith(".enc"):
+            json_path = os.path.join(os.path.dirname(cache_location), "app_info_cache.json")
+            if os.path.exists(json_path):
+                yield json_path
+
+    def get_cache_last_modified(self, cache_location):
+        """Return the most recent modification time (mtime) of the project cache file(s).
+        Checks the configured path and, if it looks like app_info_cache.enc,
+        also app_info_cache.json in the same directory.
+        Returns datetime or None if no file exists.
+        """
+        times = []
+        for path in self._get_cache_paths(cache_location):
+            try:
+                times.append(datetime.fromtimestamp(os.path.getmtime(path)))
+            except (OSError, ValueError):
+                pass
+        return max(times) if times else None
+
+    def get_cache_last_accessed(self, cache_location):
+        """Return the most recent access time (atime) of the project cache file(s).
+        Checks the configured path and, if it looks like app_info_cache.enc,
+        also app_info_cache.json in the same directory.
+        Returns datetime or None if no file exists.
+        """
+        times = []
+        for path in self._get_cache_paths(cache_location):
+            try:
+                times.append(datetime.fromtimestamp(os.path.getatime(path)))
+            except (OSError, ValueError):
+                pass
+        return max(times) if times else None
+
     def get_cache_size(self, cache_location):
         """Get human-readable cache file size"""
         try:
-            import os
             if not os.path.exists(cache_location):
                 return _("Not found")
             
