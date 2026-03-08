@@ -1,3 +1,5 @@
+import os
+
 from utils.app_info_cache import app_info_cache
 from utils.logging_setup import get_logger
 from utils.translations import I18N
@@ -12,8 +14,10 @@ class ConfigManager:
     All configuration data is stored in an encrypted cache file.
     """
     
+    EXTERNAL_BACKUP_DIR_KEY = "external_backup_dir"
+
     def __init__(self):
-        # Use the global encrypted cache instance
+        # Use the global cache instance
         self.cache = app_info_cache
     
     def get_applications(self):
@@ -31,4 +35,17 @@ class ConfigManager:
     def update_application(self, index: int, name: str, service_name: str, app_identifier: str, cache_location: str, encryption_strategy: str = None):
         """Update an existing application in the configuration"""
         self.cache.update_application(index, name, service_name, app_identifier, cache_location, encryption_strategy)
+
+    def get_external_backup_dir(self):
+        """Get configured external backup directory, if any."""
+        return self.cache.get(self.EXTERNAL_BACKUP_DIR_KEY)
+
+    def set_external_backup_dir(self, external_backup_dir: str = None):
+        """Set configured external backup directory (None/empty clears it)."""
+        if external_backup_dir is None or str(external_backup_dir).strip() == "":
+            self.cache.set(self.EXTERNAL_BACKUP_DIR_KEY, None)
+        else:
+            normalized = os.path.abspath(os.path.normpath(external_backup_dir))
+            self.cache.set(self.EXTERNAL_BACKUP_DIR_KEY, normalized)
+        self.cache.store()
 

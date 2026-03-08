@@ -120,13 +120,13 @@ class CacheManagerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(_("Cache Manager"))
-        self.setGeometry(100, 100, 1400, 600)
+        self.setGeometry(100, 100, 1200, 600)
         self._sort_column = None
         self._sort_order = Qt.AscendingOrder
         
         self.config_manager = ConfigManager()
         self.backup_manager = CacheBackupManager()
-        self.backup_dir_abs = os.path.abspath(self.backup_manager.backup_dir)
+        self.backup_manager.set_external_backup_dir(self.config_manager.get_external_backup_dir())
         
         # Setup UI
         self.setup_ui()
@@ -153,24 +153,28 @@ class CacheManagerWindow(QMainWindow):
         backup_info_layout = QHBoxLayout()
         backup_info_layout.addStretch()
 
-        self.backup_dir_label = QLabel(_("Backup Folder: {0}").format(self.backup_dir_abs))
-        self.backup_dir_label.setToolTip(self.backup_dir_abs)
+        self.backup_dir_label = QLabel()
         backup_info_layout.addWidget(self.backup_dir_label)
 
         open_backup_folder_btn = QPushButton(_("Open Backup Folder"))
         open_backup_folder_btn.clicked.connect(self.open_backup_folder)
         backup_info_layout.addWidget(open_backup_folder_btn)
+
+        set_external_backup_btn = QPushButton(_("Set External Backup Path"))
+        set_external_backup_btn.clicked.connect(self.set_external_backup_folder)
+        backup_info_layout.addWidget(set_external_backup_btn)
+
+        self._update_backup_folder_label()
         layout.addLayout(backup_info_layout)
         
         self.apps_table = QTableWidget()
-        self.apps_table.setColumnCount(9)
+        self.apps_table.setColumnCount(8)
         self.apps_table.setHorizontalHeaderLabels([
             _("Application"),
             _("Cache Location"),
             _("Cache Updated"),
             _("Last Accessed"),
             _("Last Backup"),
-            _("Latest Backup Path"),
             _("Alert"),
             _("Size"),
             _("Encryption"),
@@ -260,12 +264,6 @@ class CacheManagerWindow(QMainWindow):
                 backup_text = _("Never")
                 last_backup_key = float("-inf")
 
-            backups = self.backup_manager.list_backups(app['name'])
-            latest_backup_path = ""
-            if backups:
-                latest_backup = max(backups, key=lambda b: b.get("timestamp", ""))
-                latest_backup_path = latest_backup.get("path", "")
-
             stale_backup_alert = bool(last_backup and (now - last_backup) > timedelta(days=30))
 
             cache_size = self.get_cache_size(app['cache_location'])
@@ -285,7 +283,6 @@ class CacheManagerWindow(QMainWindow):
                 "backup_text": backup_text,
                 "cache_age_seconds": cache_age_seconds,
                 "last_backup_key": last_backup_key,
-                "latest_backup_path": latest_backup_path,
                 "stale_backup_alert": stale_backup_alert,
                 "cache_size": cache_size,
                 "strategy_display": strategy_display,
@@ -323,21 +320,16 @@ class CacheManagerWindow(QMainWindow):
             # Last backup
             self.apps_table.setItem(i, 4, QTableWidgetItem(row["backup_text"]))
 
-            # Most recent backup path
-            latest_backup_path_item = QTableWidgetItem(row["latest_backup_path"])
-            latest_backup_path_item.setToolTip(row["latest_backup_path"])
-            self.apps_table.setItem(i, 5, latest_backup_path_item)
-
             # Alert when last backup is older than 30 days
             alert_item = QTableWidgetItem("❗" if row["stale_backup_alert"] else "")
             alert_item.setTextAlignment(Qt.AlignCenter)
-            self.apps_table.setItem(i, 6, alert_item)
+            self.apps_table.setItem(i, 5, alert_item)
             
             # Cache size
-            self.apps_table.setItem(i, 7, QTableWidgetItem(row["cache_size"]))
+            self.apps_table.setItem(i, 6, QTableWidgetItem(row["cache_size"]))
             
             # Encryption strategy
-            self.apps_table.setItem(i, 8, QTableWidgetItem(row["strategy_display"]))
+            self.apps_table.setItem(i, 7, QTableWidgetItem(row["strategy_display"]))
         
         self.apps_table.resizeColumnsToContents()
         
@@ -357,12 +349,10 @@ class CacheManagerWindow(QMainWindow):
         elif column == 4:
             key_fn = lambda r: r["last_backup"] or datetime.min
         elif column == 5:
-            key_fn = lambda r: r["latest_backup_path"].lower()
-        elif column == 6:
             key_fn = lambda r: r["stale_backup_alert"]
-        elif column == 7:
+        elif column == 6:
             key_fn = lambda r: r["cache_size"]
-        elif column == 8:
+        elif column == 7:
             key_fn = lambda r: r["strategy_display"].lower()
         else:
             key_fn = lambda r: r["app"]["name"].lower()
@@ -380,14 +370,39 @@ class CacheManagerWindow(QMainWindow):
     def open_backup_folder(self):
         """Open the backup folder in the platform file manager."""
         try:
-            os.makedirs(self.backup_dir_abs, exist_ok=True)
-            Utils.open_file(self.backup_dir_abs)
+            self.backup_manager.open_effective_backup_dir()
         except Exception as e:
             QMessageBox.warning(
                 self,
                 _("Unable to Open Backup Folder"),
                 _("Failed to open backup folder: {0}").format(str(e)),
             )
+
+    def set_external_backup_folder(self):
+        """Prompt user for external backup folder and persist it."""
+        current_path = self.backup_manager.get_external_backup_dir() or ""
+        selected_path = QFileDialog.getExistingDirectory(
+            self,
+            _("Select External Backup Folder"),
+            current_path
+        )
+        if not selected_path:
+            return
+        selected_path = os.path.abspath(os.path.normpath(selected_path))
+        self.config_manager.set_external_backup_dir(selected_path)
+        self.backup_manager.set_external_backup_dir(selected_path)
+        self._update_backup_folder_label()
+        QMessageBox.information(
+            self,
+            _("External Backup Path Updated"),
+            _("External backup path set to:\n{0}").format(selected_path)
+        )
+
+    def _update_backup_folder_label(self):
+        """Show active backup location (external preferred)."""
+        effective_path = self.backup_manager.get_effective_backup_dir()
+        self.backup_dir_label.setText(_("Backup Folder: {0}").format(effective_path))
+        self.backup_dir_label.setToolTip(effective_path)
 
     def _get_selected_config_indices(self):
         """Map selected table rows to ConfigManager application indices."""
@@ -476,10 +491,11 @@ class CacheManagerWindow(QMainWindow):
             )
             
             if backup_path:
+                backup_targets = "\n".join(self.backup_manager.list_backup_targets())
                 QMessageBox.information(
                     self,
                     _("Backup Successful"),
-                    _("Backup created for: {0}\n\nLocation: {1}").format(app['name'], backup_path)
+                    _("Backup created for: {0}\n\nWritten to:\n{1}").format(app['name'], backup_targets)
                 )
             else:
                 QMessageBox.warning(

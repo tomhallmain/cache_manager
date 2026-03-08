@@ -115,6 +115,16 @@ class AppInfoCache:
         with self._lock:
             pass
 
+    def get(self, key: str):
+        """Get a value from the cache"""
+        with self._lock:
+            return self._cache.get(key)
+
+    def set(self, key: str, value: any):
+        """Set a value in the cache"""
+        with self._lock:
+            self._cache[key] = value
+
     def get_applications(self) -> List[Dict]:
         """Get list of all configured applications"""
         with self._lock:
