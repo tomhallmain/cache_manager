@@ -15,6 +15,7 @@ from cache_manager.cache_backup_manager import CacheBackupManager
 from utils.logging_setup import get_logger
 from utils.translations import I18N
 from utils.encryption_strategy import EncryptionStrategy
+from utils.utils import Utils
 
 logger = get_logger(__name__)
 _ = I18N._
@@ -258,11 +259,11 @@ class CacheManagerWindow(QMainWindow):
     
     def _get_cache_paths(self, cache_location):
         """Yield paths to check for cache file(s): the configured path and, if .enc, also app_info_cache.json in same dir."""
-        if os.path.exists(cache_location):
+        if Utils.isfile_with_retry(cache_location):
             yield cache_location
         if cache_location.endswith(".enc"):
             json_path = os.path.join(os.path.dirname(cache_location), "app_info_cache.json")
-            if os.path.exists(json_path):
+            if Utils.isfile_with_retry(json_path):
                 yield json_path
 
     def get_cache_last_modified(self, cache_location):
@@ -296,7 +297,7 @@ class CacheManagerWindow(QMainWindow):
     def get_cache_size(self, cache_location):
         """Get human-readable cache file size"""
         try:
-            if not os.path.exists(cache_location):
+            if not Utils.isfile_with_retry(cache_location):
                 return _("Not found")
             
             size_bytes = os.path.getsize(cache_location)

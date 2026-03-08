@@ -145,7 +145,7 @@ class Config:
                 loc = loc.strip().replace("{HOME}", os.path.expanduser("~"))
             if not sys.platform == "win32" and "\\" in loc:
                 loc = loc.replace("\\", "/")
-            if not os.path.isdir(loc):
+            if not Utils.isdir_with_retry(loc):
                 raise Exception(f"Invalid location provided for {key}: {loc}")
             return loc
         return None
@@ -155,15 +155,15 @@ class Config:
         if filepath and filepath.strip() != "":
             if "{HOME}" in filepath:
                 filepath = filepath.strip().replace("{HOME}", os.path.expanduser("~"))
-            elif not os.path.isfile(filepath):
+            elif not Utils.isfile_with_retry(filepath):
                 try_path = os.path.join(configs_dir, filepath)
-                if os.path.isfile(try_path):
+                if Utils.isfile_with_retry(try_path):
                     filepath = try_path
                 else:
                     try_path = os.path.join(library_data_dir, filepath)
-                    if os.path.isfile(try_path):
+                    if Utils.isfile_with_retry(try_path):
                         filepath = try_path
-            if not os.path.isfile(filepath):
+            if not Utils.isfile_with_retry(filepath):
                 raise Exception(f"Invalid location provided for {key}: {filepath}")
             return filepath
         return None
@@ -204,7 +204,7 @@ class Config:
         subdirectories = {}
         for directory in self.directories:
             try:
-                this_dir_subdirs = [os.path.join(directory, d) for d in os.listdir(directory) if os .path.isdir(os.path.join(directory, d))]
+                this_dir_subdirs = [os.path.join(directory, d) for d in os.listdir(directory) if Utils.isdir_with_retry(os.path.join(directory, d))]
                 if len(this_dir_subdirs) == 0:
                     subdirectories[directory] = os.path.basename(directory)
                 else:

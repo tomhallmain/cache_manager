@@ -8,6 +8,7 @@ from pathlib import Path
 from utils.encryptor import decrypt_data_from_file
 from utils.logging_setup import get_logger
 from utils.translations import I18N
+from utils.utils import Utils
 
 logger = get_logger(__name__)
 _ = I18N._
@@ -32,7 +33,7 @@ class CacheBackupManager:
         Returns:
             Path to the backup file if successful, None otherwise
         """
-        if not os.path.exists(cache_location):
+        if not Utils.isfile_with_retry(cache_location):
             return None
         
         try:
@@ -70,7 +71,7 @@ class CacheBackupManager:
         safe_name = sanitize_filename(app_name)
         metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
         
-        if os.path.exists(metadata_file):
+        if Utils.isfile_with_retry(metadata_file):
             with open(metadata_file, 'r') as f:
                 metadata = json.load(f)
         else:
@@ -89,7 +90,7 @@ class CacheBackupManager:
         safe_name = sanitize_filename(app_name)
         metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
         
-        if not os.path.exists(metadata_file):
+        if not Utils.isfile_with_retry(metadata_file):
             return None
         
         try:
@@ -111,7 +112,7 @@ class CacheBackupManager:
         safe_name = sanitize_filename(app_name)
         metadata_file = os.path.join(self.backup_dir, f"{safe_name}_backups.json")
         
-        if not os.path.exists(metadata_file):
+        if not Utils.isfile_with_retry(metadata_file):
             return []
         
         try:
@@ -140,7 +141,7 @@ class CacheBackupManager:
         # Remove old backup files
         for backup in backups_to_remove:
             backup_path = backup.get('path')
-            if backup_path and os.path.exists(backup_path):
+            if backup_path and Utils.isfile_with_retry(backup_path):
                 try:
                     os.remove(backup_path)
                     logger.info(_("Removed old backup: {}".format(backup_path)))
