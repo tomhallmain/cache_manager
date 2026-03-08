@@ -126,6 +126,7 @@ class CacheManagerWindow(QMainWindow):
         
         self.config_manager = ConfigManager()
         self.backup_manager = CacheBackupManager()
+        self.backup_dir_abs = os.path.abspath(self.backup_manager.backup_dir)
         
         # Setup UI
         self.setup_ui()
@@ -148,6 +149,18 @@ class CacheManagerWindow(QMainWindow):
         # Application list
         apps_label = QLabel(_("Applications:"))
         layout.addWidget(apps_label)
+
+        backup_info_layout = QHBoxLayout()
+        backup_info_layout.addStretch()
+
+        self.backup_dir_label = QLabel(_("Backup Folder: {0}").format(self.backup_dir_abs))
+        self.backup_dir_label.setToolTip(self.backup_dir_abs)
+        backup_info_layout.addWidget(self.backup_dir_label)
+
+        open_backup_folder_btn = QPushButton(_("Open Backup Folder"))
+        open_backup_folder_btn.clicked.connect(self.open_backup_folder)
+        backup_info_layout.addWidget(open_backup_folder_btn)
+        layout.addLayout(backup_info_layout)
         
         self.apps_table = QTableWidget()
         self.apps_table.setColumnCount(9)
@@ -226,7 +239,7 @@ class CacheManagerWindow(QMainWindow):
         for app_index, app in enumerate(apps):
             cache_updated = self.get_cache_last_modified(app['cache_location'])
             if cache_updated:
-                cache_updated_text = cache_updated.strftime("%Y-%m-%d %H:%M:%S")
+                cache_updated_text = cache_updated.strftime("%Y-%m-%d %H:%M")
                 cache_age_seconds = (now - cache_updated).total_seconds()
             else:
                 cache_updated_text = _("Not found")
@@ -234,13 +247,13 @@ class CacheManagerWindow(QMainWindow):
 
             last_accessed = self.get_cache_last_accessed(app['cache_location'])
             if last_accessed:
-                last_accessed_text = last_accessed.strftime("%Y-%m-%d %H:%M:%S")
+                last_accessed_text = last_accessed.strftime("%Y-%m-%d %H:%M")
             else:
                 last_accessed_text = _("Not found")
 
             last_backup = self.backup_manager.get_last_backup_time(app['name'])
             if last_backup:
-                backup_text = last_backup.strftime("%Y-%m-%d %H:%M:%S")
+                backup_text = last_backup.strftime("%Y-%m-%d %H:%M")
                 # "Never" should be treated as oldest, so it sorts before dated backups in ascending order.
                 last_backup_key = last_backup.timestamp()
             else:
@@ -363,6 +376,18 @@ class CacheManagerWindow(QMainWindow):
             self._sort_column = column
             self._sort_order = Qt.AscendingOrder
         self.refresh_applications()
+
+    def open_backup_folder(self):
+        """Open the backup folder in the platform file manager."""
+        try:
+            os.makedirs(self.backup_dir_abs, exist_ok=True)
+            Utils.open_file(self.backup_dir_abs)
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                _("Unable to Open Backup Folder"),
+                _("Failed to open backup folder: {0}").format(str(e)),
+            )
 
     def _get_selected_config_indices(self):
         """Map selected table rows to ConfigManager application indices."""
