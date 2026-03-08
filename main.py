@@ -8,7 +8,7 @@ import os
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QMessageBox, QDialog, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView, QComboBox
 from PySide6.QtCore import Qt, QTimer
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from cache_manager.config_manager import ConfigManager
 from cache_manager.cache_backup_manager import CacheBackupManager
@@ -120,7 +120,7 @@ class CacheManagerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(_("Cache Manager"))
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1400, 600)
         self._sort_column = None
         self._sort_order = Qt.AscendingOrder
         
@@ -150,8 +150,18 @@ class CacheManagerWindow(QMainWindow):
         layout.addWidget(apps_label)
         
         self.apps_table = QTableWidget()
-        self.apps_table.setColumnCount(7)
-        self.apps_table.setHorizontalHeaderLabels([_("Application"), _("Cache Location"), _("Cache Updated"), _("Last Accessed"), _("Last Backup"), _("Size"), _("Encryption")])
+        self.apps_table.setColumnCount(9)
+        self.apps_table.setHorizontalHeaderLabels([
+            _("Application"),
+            _("Cache Location"),
+            _("Cache Updated"),
+            _("Last Accessed"),
+            _("Last Backup"),
+            _("Latest Backup Path"),
+            _("Alert"),
+            _("Size"),
+            _("Encryption"),
+        ])
         self.apps_table.horizontalHeader().setStretchLastSection(True)
         self.apps_table.horizontalHeader().setSortIndicatorShown(True)
         self.apps_table.setSelectionBehavior(QTableWidget.SelectRows)
@@ -237,6 +247,14 @@ class CacheManagerWindow(QMainWindow):
                 backup_text = _("Never")
                 last_backup_key = float("-inf")
 
+            backups = self.backup_manager.list_backups(app['name'])
+            latest_backup_path = ""
+            if backups:
+                latest_backup = max(backups, key=lambda b: b.get("timestamp", ""))
+                latest_backup_path = latest_backup.get("path", "")
+
+            stale_backup_alert = bool(last_backup and (now - last_backup) > timedelta(days=30))
+
             cache_size = self.get_cache_size(app['cache_location'])
 
             encryption_strategy = app.get('encryption_strategy', EncryptionStrategy.UNKNOWN.value)
@@ -254,6 +272,8 @@ class CacheManagerWindow(QMainWindow):
                 "backup_text": backup_text,
                 "cache_age_seconds": cache_age_seconds,
                 "last_backup_key": last_backup_key,
+                "latest_backup_path": latest_backup_path,
+                "stale_backup_alert": stale_backup_alert,
                 "cache_size": cache_size,
                 "strategy_display": strategy_display,
             })
@@ -289,12 +309,22 @@ class CacheManagerWindow(QMainWindow):
             
             # Last backup
             self.apps_table.setItem(i, 4, QTableWidgetItem(row["backup_text"]))
+
+            # Most recent backup path
+            latest_backup_path_item = QTableWidgetItem(row["latest_backup_path"])
+            latest_backup_path_item.setToolTip(row["latest_backup_path"])
+            self.apps_table.setItem(i, 5, latest_backup_path_item)
+
+            # Alert when last backup is older than 30 days
+            alert_item = QTableWidgetItem("❗" if row["stale_backup_alert"] else "")
+            alert_item.setTextAlignment(Qt.AlignCenter)
+            self.apps_table.setItem(i, 6, alert_item)
             
             # Cache size
-            self.apps_table.setItem(i, 5, QTableWidgetItem(row["cache_size"]))
+            self.apps_table.setItem(i, 7, QTableWidgetItem(row["cache_size"]))
             
             # Encryption strategy
-            self.apps_table.setItem(i, 6, QTableWidgetItem(row["strategy_display"]))
+            self.apps_table.setItem(i, 8, QTableWidgetItem(row["strategy_display"]))
         
         self.apps_table.resizeColumnsToContents()
         
@@ -314,8 +344,12 @@ class CacheManagerWindow(QMainWindow):
         elif column == 4:
             key_fn = lambda r: r["last_backup"] or datetime.min
         elif column == 5:
-            key_fn = lambda r: r["cache_size"]
+            key_fn = lambda r: r["latest_backup_path"].lower()
         elif column == 6:
+            key_fn = lambda r: r["stale_backup_alert"]
+        elif column == 7:
+            key_fn = lambda r: r["cache_size"]
+        elif column == 8:
             key_fn = lambda r: r["strategy_display"].lower()
         else:
             key_fn = lambda r: r["app"]["name"].lower()
