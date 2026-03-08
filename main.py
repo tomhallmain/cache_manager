@@ -121,6 +121,8 @@ class CacheManagerWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(_("Cache Manager"))
         self.setGeometry(100, 100, 800, 600)
+        self._sort_column = None
+        self._sort_order = Qt.AscendingOrder
         
         self.config_manager = ConfigManager()
         self.backup_manager = CacheBackupManager()
@@ -151,8 +153,10 @@ class CacheManagerWindow(QMainWindow):
         self.apps_table.setColumnCount(7)
         self.apps_table.setHorizontalHeaderLabels([_("Application"), _("Cache Location"), _("Cache Updated"), _("Last Accessed"), _("Last Backup"), _("Size"), _("Encryption")])
         self.apps_table.horizontalHeader().setStretchLastSection(True)
+        self.apps_table.horizontalHeader().setSortIndicatorShown(True)
         self.apps_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.apps_table.cellDoubleClicked.connect(self.on_app_double_clicked)
+        self.apps_table.horizontalHeader().sectionClicked.connect(self.on_table_header_clicked)
         layout.addWidget(self.apps_table)
         
         # Button layout
@@ -206,12 +210,71 @@ class CacheManagerWindow(QMainWindow):
     def refresh_applications(self):
         """Refresh the applications list from disk and update the table."""
         apps = self.config_manager.get_applications()
-        
-        self.apps_table.setRowCount(len(apps))
-        
-        for i, app in enumerate(apps):
+        rows = []
+        now = datetime.now()
+
+        for app_index, app in enumerate(apps):
+            cache_updated = self.get_cache_last_modified(app['cache_location'])
+            if cache_updated:
+                cache_updated_text = cache_updated.strftime("%Y-%m-%d %H:%M:%S")
+                cache_age_seconds = (now - cache_updated).total_seconds()
+            else:
+                cache_updated_text = _("Not found")
+                cache_age_seconds = float("inf")
+
+            last_accessed = self.get_cache_last_accessed(app['cache_location'])
+            if last_accessed:
+                last_accessed_text = last_accessed.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                last_accessed_text = _("Not found")
+
+            last_backup = self.backup_manager.get_last_backup_time(app['name'])
+            if last_backup:
+                backup_text = last_backup.strftime("%Y-%m-%d %H:%M:%S")
+                # "Never" should be treated as oldest, so it sorts before dated backups in ascending order.
+                last_backup_key = last_backup.timestamp()
+            else:
+                backup_text = _("Never")
+                last_backup_key = float("-inf")
+
+            cache_size = self.get_cache_size(app['cache_location'])
+
+            encryption_strategy = app.get('encryption_strategy', EncryptionStrategy.UNKNOWN.value)
+            strategy_enum = EncryptionStrategy.from_string(encryption_strategy)
+            strategy_display = strategy_enum.display_value(_)
+
+            rows.append({
+                "app_index": app_index,
+                "app": app,
+                "cache_updated": cache_updated,
+                "cache_updated_text": cache_updated_text,
+                "last_accessed": last_accessed,
+                "last_accessed_text": last_accessed_text,
+                "last_backup": last_backup,
+                "backup_text": backup_text,
+                "cache_age_seconds": cache_age_seconds,
+                "last_backup_key": last_backup_key,
+                "cache_size": cache_size,
+                "strategy_display": strategy_display,
+            })
+
+        # Default sort: last backup ascending, then cache age ascending.
+        if self._sort_column is None:
+            rows.sort(key=lambda r: (r["last_backup_key"], r["cache_age_seconds"]))
+            self.apps_table.horizontalHeader().setSortIndicator(4, Qt.AscendingOrder)
+        else:
+            reverse = self._sort_order == Qt.DescendingOrder
+            rows = self._sort_rows(rows, self._sort_column, reverse)
+            self.apps_table.horizontalHeader().setSortIndicator(self._sort_column, self._sort_order)
+
+        self.apps_table.setRowCount(len(rows))
+
+        for i, row in enumerate(rows):
+            app = row["app"]
             # Application name
-            self.apps_table.setItem(i, 0, QTableWidgetItem(app['name']))
+            name_item = QTableWidgetItem(app['name'])
+            name_item.setData(Qt.UserRole, row["app_index"])
+            self.apps_table.setItem(i, 0, name_item)
             
             # Cache location
             location_item = QTableWidgetItem(app['cache_location'])
@@ -219,43 +282,66 @@ class CacheManagerWindow(QMainWindow):
             self.apps_table.setItem(i, 1, location_item)
             
             # Cache updated (most recent mtime of project cache: .enc or .json)
-            cache_updated = self.get_cache_last_modified(app['cache_location'])
-            if cache_updated:
-                cache_updated_text = cache_updated.strftime("%Y-%m-%d %H:%M:%S")
-            else:
-                cache_updated_text = _("Not found")
-            self.apps_table.setItem(i, 2, QTableWidgetItem(cache_updated_text))
+            self.apps_table.setItem(i, 2, QTableWidgetItem(row["cache_updated_text"]))
             
             # Last accessed (most recent atime of project cache: .enc or .json)
-            last_accessed = self.get_cache_last_accessed(app['cache_location'])
-            if last_accessed:
-                last_accessed_text = last_accessed.strftime("%Y-%m-%d %H:%M:%S")
-            else:
-                last_accessed_text = _("Not found")
-            self.apps_table.setItem(i, 3, QTableWidgetItem(last_accessed_text))
+            self.apps_table.setItem(i, 3, QTableWidgetItem(row["last_accessed_text"]))
             
             # Last backup
-            last_backup = self.backup_manager.get_last_backup_time(app['name'])
-            if last_backup:
-                backup_text = last_backup.strftime("%Y-%m-%d %H:%M:%S")
-            else:
-                backup_text = _("Never")
-            self.apps_table.setItem(i, 4, QTableWidgetItem(backup_text))
+            self.apps_table.setItem(i, 4, QTableWidgetItem(row["backup_text"]))
             
             # Cache size
-            cache_size = self.get_cache_size(app['cache_location'])
-            self.apps_table.setItem(i, 5, QTableWidgetItem(cache_size))
+            self.apps_table.setItem(i, 5, QTableWidgetItem(row["cache_size"]))
             
             # Encryption strategy
-            encryption_strategy = app.get('encryption_strategy', EncryptionStrategy.UNKNOWN.value)
-            strategy_enum = EncryptionStrategy.from_string(encryption_strategy)
-            strategy_display = strategy_enum.display_value(_)
-            self.apps_table.setItem(i, 6, QTableWidgetItem(strategy_display))
+            self.apps_table.setItem(i, 6, QTableWidgetItem(row["strategy_display"]))
         
         self.apps_table.resizeColumnsToContents()
         
         # Enable/disable backup button based on selection
         self.backup_btn.setEnabled(len(self.apps_table.selectedItems()) > 0)
+
+    def _sort_rows(self, rows, column, reverse=False):
+        """Sort precomputed table rows for user-selected column/order."""
+        if column == 0:
+            key_fn = lambda r: r["app"]["name"].lower()
+        elif column == 1:
+            key_fn = lambda r: r["app"]["cache_location"].lower()
+        elif column == 2:
+            key_fn = lambda r: r["cache_updated"] or datetime.min
+        elif column == 3:
+            key_fn = lambda r: r["last_accessed"] or datetime.min
+        elif column == 4:
+            key_fn = lambda r: r["last_backup"] or datetime.min
+        elif column == 5:
+            key_fn = lambda r: r["cache_size"]
+        elif column == 6:
+            key_fn = lambda r: r["strategy_display"].lower()
+        else:
+            key_fn = lambda r: r["app"]["name"].lower()
+        return sorted(rows, key=key_fn, reverse=reverse)
+
+    def on_table_header_clicked(self, column):
+        """Allow user to override sort by clicking table headers."""
+        if self._sort_column == column:
+            self._sort_order = Qt.DescendingOrder if self._sort_order == Qt.AscendingOrder else Qt.AscendingOrder
+        else:
+            self._sort_column = column
+            self._sort_order = Qt.AscendingOrder
+        self.refresh_applications()
+
+    def _get_selected_config_indices(self):
+        """Map selected table rows to ConfigManager application indices."""
+        selected_indices = set()
+        for item in self.apps_table.selectedItems():
+            row = item.row()
+            name_item = self.apps_table.item(row, 0)
+            if name_item is None:
+                continue
+            app_index = name_item.data(Qt.UserRole)
+            if isinstance(app_index, int):
+                selected_indices.add(app_index)
+        return selected_indices
     
     def _get_cache_paths(self, cache_location):
         """Yield paths to check for cache file(s): the configured path and, if .enc, also app_info_cache.json in same dir."""
@@ -314,9 +400,7 @@ class CacheManagerWindow(QMainWindow):
     
     def create_backup(self):
         """Create a backup for the selected application"""
-        selected_rows = set()
-        for item in self.apps_table.selectedItems():
-            selected_rows.add(item.row())
+        selected_rows = self._get_selected_config_indices()
         
         if not selected_rows:
             QMessageBox.warning(self, _("No Selection"), _("Please select an application to backup."))
@@ -369,9 +453,7 @@ class CacheManagerWindow(QMainWindow):
     
     def edit_application(self):
         """Edit the selected application"""
-        selected_rows = set()
-        for item in self.apps_table.selectedItems():
-            selected_rows.add(item.row())
+        selected_rows = self._get_selected_config_indices()
         
         if not selected_rows:
             QMessageBox.warning(self, _("No Selection"), _("Please select an application to edit."))
@@ -401,9 +483,7 @@ class CacheManagerWindow(QMainWindow):
     
     def remove_application(self):
         """Remove the selected application"""
-        selected_rows = set()
-        for item in self.apps_table.selectedItems():
-            selected_rows.add(item.row())
+        selected_rows = self._get_selected_config_indices()
         
         if not selected_rows:
             QMessageBox.warning(self, _("No Selection"), _("Please select an application to remove."))
