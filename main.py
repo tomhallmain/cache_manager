@@ -6,12 +6,13 @@ Manages backup and inspection of application caches
 
 import os
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QMessageBox, QDialog, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView, QComboBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, QMessageBox, QDialog, QLineEdit, QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView, QComboBox, QInputDialog
 from PySide6.QtCore import Qt, QTimer
 from datetime import datetime, timedelta
 
 from cache_manager.config_manager import ConfigManager
 from cache_manager.cache_backup_manager import CacheBackupManager
+from cache_manager.recovery_bundle_manager import RecoveryBundleManager
 from utils.logging_setup import get_logger
 from utils.translations import I18N
 from utils.encryption_strategy import EncryptionStrategy
@@ -146,26 +147,33 @@ class CacheManagerWindow(QMainWindow):
         
         layout = QVBoxLayout()
         
-        # Application list
+        # Application list header row
+        header_layout = QHBoxLayout()
         apps_label = QLabel(_("Applications:"))
-        layout.addWidget(apps_label)
-
-        backup_info_layout = QHBoxLayout()
-        backup_info_layout.addStretch()
+        header_layout.addWidget(apps_label)
+        header_layout.addStretch()
 
         self.backup_dir_label = QLabel()
-        backup_info_layout.addWidget(self.backup_dir_label)
+        header_layout.addWidget(self.backup_dir_label)
 
         open_backup_folder_btn = QPushButton(_("Open Backup Folder"))
         open_backup_folder_btn.clicked.connect(self.open_backup_folder)
-        backup_info_layout.addWidget(open_backup_folder_btn)
+        header_layout.addWidget(open_backup_folder_btn)
 
         set_external_backup_btn = QPushButton(_("Set External Backup Path"))
         set_external_backup_btn.clicked.connect(self.set_external_backup_folder)
-        backup_info_layout.addWidget(set_external_backup_btn)
+        header_layout.addWidget(set_external_backup_btn)
+
+        import_recovery_bundle_btn = QPushButton(_("Import Recovery Bundle"))
+        import_recovery_bundle_btn.clicked.connect(self.import_recovery_bundle)
+        header_layout.addWidget(import_recovery_bundle_btn)
+
+        reset_recovery_password_btn = QPushButton(_("Reset Recovery Password"))
+        reset_recovery_password_btn.clicked.connect(self.reset_recovery_passphrase)
+        header_layout.addWidget(reset_recovery_password_btn)
 
         self._update_backup_folder_label()
-        layout.addLayout(backup_info_layout)
+        layout.addLayout(header_layout)
         
         self.apps_table = QTableWidget()
         self.apps_table.setColumnCount(8)
@@ -479,6 +487,15 @@ class CacheManagerWindow(QMainWindow):
         if not selected_rows:
             QMessageBox.warning(self, _("No Selection"), _("Please select an application to backup."))
             return
+
+        recovery_passphrase = self._ensure_recovery_passphrase()
+        if not recovery_passphrase:
+            QMessageBox.warning(
+                self,
+                _("Recovery Passphrase Required"),
+                _("A recovery passphrase is required before backups can proceed.")
+            )
+            return
         
         for row in selected_rows:
             app = self.config_manager.get_applications()[row]
@@ -503,8 +520,143 @@ class CacheManagerWindow(QMainWindow):
                     _("Backup Failed"),
                     _("Failed to create backup for: {}\n\nMake sure the cache file exists and is accessible.").format(app['name'])
                 )
+
+        self._refresh_recovery_bundle_after_backup(recovery_passphrase)
         
         self.refresh_applications()
+
+    def _ensure_recovery_passphrase(self):
+        """Get or prompt for recovery bundle passphrase and persist if newly set."""
+        saved = RecoveryBundleManager.get_saved_passphrase()
+        if saved:
+            return saved
+
+        passphrase, ok = QInputDialog.getText(
+            self,
+            _("Set Recovery Passphrase"),
+            _("Create a passphrase for encrypted recovery bundles:"),
+            QLineEdit.Password,
+        )
+        if not ok or not passphrase:
+            return None
+
+        confirm, ok_confirm = QInputDialog.getText(
+            self,
+            _("Confirm Recovery Passphrase"),
+            _("Re-enter recovery passphrase:"),
+            QLineEdit.Password,
+        )
+        if not ok_confirm or passphrase != confirm:
+            QMessageBox.warning(self, _("Passphrase Mismatch"), _("Recovery passphrase confirmation did not match."))
+            return None
+
+        RecoveryBundleManager.set_saved_passphrase(passphrase)
+        return passphrase
+
+    def _refresh_recovery_bundle_after_backup(self, recovery_passphrase):
+        """Re-export the encrypted recovery bundle after backup operations."""
+        try:
+            effective_backup_dir = self.backup_manager.get_effective_backup_dir()
+            bundle_path = RecoveryBundleManager.get_default_bundle_path(effective_backup_dir)
+            result = RecoveryBundleManager.export_bundle(
+                applications=self.config_manager.get_applications(),
+                bundle_path=bundle_path,
+                recovery_passphrase=recovery_passphrase,
+            )
+            if result.get("error_count", 0) > 0:
+                logger.warning(
+                    _("Recovery bundle export completed with errors: {0}").format("; ".join(result.get("errors", [])))
+                )
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                _("Recovery Bundle Export Failed"),
+                _("Backups were created, but recovery bundle export failed:\n{0}").format(str(e)),
+            )
+
+    def reset_recovery_passphrase(self):
+        """Reset saved recovery passphrase and immediately re-export recovery bundle."""
+        new_passphrase, ok = QInputDialog.getText(
+            self,
+            _("Reset Recovery Passphrase"),
+            _("Enter new recovery passphrase:"),
+            QLineEdit.Password,
+        )
+        if not ok or not new_passphrase:
+            return
+
+        confirm_passphrase, ok_confirm = QInputDialog.getText(
+            self,
+            _("Confirm New Recovery Passphrase"),
+            _("Re-enter new recovery passphrase:"),
+            QLineEdit.Password,
+        )
+        if not ok_confirm or new_passphrase != confirm_passphrase:
+            QMessageBox.warning(self, _("Passphrase Mismatch"), _("Recovery passphrase confirmation did not match."))
+            return
+
+        try:
+            RecoveryBundleManager.set_saved_passphrase(new_passphrase)
+            self._refresh_recovery_bundle_after_backup(new_passphrase)
+            QMessageBox.information(
+                self,
+                _("Recovery Passphrase Reset"),
+                _("Recovery passphrase was updated and recovery bundle was re-exported."),
+            )
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                _("Recovery Passphrase Reset Failed"),
+                _("Failed to reset recovery passphrase:\n{0}").format(str(e)),
+            )
+
+    def import_recovery_bundle(self):
+        """Import a recovery bundle from disk and rehydrate key material."""
+        initial_dir = self.backup_manager.get_effective_backup_dir()
+        bundle_path, _selected_filter = QFileDialog.getOpenFileName(
+            self,
+            _("Select Recovery Bundle"),
+            initial_dir,
+            _("Encrypted Bundle (*.enc);;All Files (*)")
+        )
+        if not bundle_path:
+            return
+
+        passphrase, ok = QInputDialog.getText(
+            self,
+            _("Recovery Bundle Passphrase"),
+            _("Enter passphrase for this recovery bundle:"),
+            QLineEdit.Password,
+        )
+        if not ok or not passphrase:
+            return
+
+        overwrite = QMessageBox.question(
+            self,
+            _("Overwrite Existing Keys?"),
+            _("Overwrite existing key material for matching apps?"),
+            QMessageBox.Yes | QMessageBox.No,
+        ) == QMessageBox.Yes
+
+        try:
+            result = RecoveryBundleManager.import_bundle(
+                bundle_path=bundle_path,
+                recovery_passphrase=passphrase,
+                overwrite_existing=overwrite,
+            )
+            QMessageBox.information(
+                self,
+                _("Recovery Bundle Import Complete"),
+                _(
+                    "Imported: {0}\nSkipped: {1}\nFailed: {2}"
+                ).format(result["imported_count"], result["skipped_count"], result["failed_count"]),
+            )
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                _("Recovery Bundle Import Failed"),
+                _("Failed to import recovery bundle:\n{0}").format(str(e)),
+            )
     
     def add_application(self):
         """Add a new application"""
