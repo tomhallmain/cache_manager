@@ -3,14 +3,17 @@
 A PySide6-based application for managing out-of-cycle backups of application caches that use the shared encryption system from [utils/encryptor.py](https://github.com/tomhallmain/sd-runner/blob/master/utils/encryptor.py).
 
 Designed for managing caches from applications that utilize the same encryption infrastructure, including:
-- [simple_image_compare](https://github.com/tomhallmain/simple_image_compare)
+- [Weidr](https://github.com/tomhallmain/Weidr)
 - [sd-runner](https://github.com/tomhallmain/sd-runner)
 - [muse](https://github.com/tomhallmain/muse)
 
 ## Features
 
 - **Cache Backups**: Create out-of-cycle backups that won't be overwritten during normal rotation
-- **Backup Tracking**: Display last operational backup timestamp for each application
+- **Backup Tracking**: Display last operational backup timestamp and stale-backup alerting in the UI
+- **Dual-Destination Backups**: Write backups to local `backups/` and an optional external backup directory
+- **Recovery Bundle**: Maintain an encrypted portable recovery bundle (`cache_recovery.bundle.enc`) containing key material needed to recover decryptability on another machine
+- **Recovery Import**: Import a recovery bundle from the UI to rehydrate key material and restore cache files from available backups
 - **Application Management**: Add, edit, and remove applications
 - **Encryption Support**: Tracks encryption strategy (None, Standard, OQS) per application
 - **Automatic Rotation**: Maintains maximum of 10 backups per application
@@ -49,7 +52,12 @@ Each managed application requires:
 - Cache file location (`.enc` format)
 - Encryption strategy
 
-Backups are stored in `backups/` with sanitized filenames.
+Backup configuration:
+- Local backup directory defaults to `backups/` (sanitized backup filenames)
+- Optional external backup directory can be set in the UI (`Set External Backup Path`)
+- When external backup is configured, each backup operation writes to both local and external destinations
+- Recovery bundle location defaults to the active backup destination as `cache_recovery.bundle.enc`
+- Recovery bundle encryption uses a user-defined recovery passphrase (set on first backup if not already configured; can be rotated via `Reset Recovery Password`)
 
 ## Usage
 
