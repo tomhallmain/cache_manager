@@ -1,9 +1,635 @@
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: cache_manager 1.0\n"
+"Project-Id-Version: 1.0\n"
+"POT-Creation-Date: 2026-03-31 19:56-0400\n"
+"PO-Revision-Date: 2026-03-31 19:56-0400\n"
+"Last-Translator: Translator Name <translator@example.com>\n"
+"Language-Team: de Team <<EMAIL>>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"First-Author: THOMAS HALL <tomhall.main@gmail.com>\n"
-"Last-Translator: Thomas Hall <tomhall.main@gmail.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: main.py:30 main.py:225
+msgid "Add Application"
+msgstr "Anwendung hinzufügen"
+
+#: main.py:30 main.py:229
+msgid "Edit Application"
+msgstr "Bearbeiten Anwendung"
+
+#: main.py:37
+msgid "Application Name:"
+msgstr "Anwendung Name:"
+
+#: main.py:42
+msgid "Service Name:"
+msgstr "Dienstname:"
+
+#: main.py:47
+msgid "App Identifier:"
+msgstr "Anwendungsbezeichner:"
+
+#: main.py:53
+msgid "Cache Location:"
+msgstr "Cacheort:"
+
+#: main.py:56
+msgid "Browse..."
+msgstr "Navigieren..."
+
+#: main.py:72
+msgid "OK"
+msgstr "OK"
+
+#: main.py:74
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: main.py:98
+msgid "Select Cache File"
+msgstr "Cache-Datei auswählen"
+
+#: main.py:100
+msgid "Encrypted Files (*.enc);;All Files (*)"
+msgstr "Verschlüsselte Dateien (*.enc);;Alle Dateien (*)"
+
+#: main.py:123
+msgid "Cache Manager"
+msgstr "Cache-Manager"
+
+#: main.py:152
+msgid "Applications:"
+msgstr "Anwendungen:"
+
+#: main.py:181
+msgid "Application"
+msgstr "Anwendung"
+
+#: main.py:182
+msgid "Cache Location"
+msgstr "Cacheposition"
+
+#: main.py:185
+msgid "Last Backup"
+msgstr "Letzter Backup"
+
+#: main.py:187
+msgid "Size"
+msgstr "Größe"
+
+#: main.py:201
+msgid "Create Backup"
+msgstr "Sicherung erstellen"
+
+#: main.py:148
+msgid "Inspect Cache"
+msgstr "Überprüfen Sie den Cache"
+
+#: main.py:150
+msgid "TODO: Implement cache property inspection"
+msgstr "TODO: Die Implementierung der Cache-Eigenschafteninspektion vornehmen"
+
+#: main.py:153
+msgid "Modify Cache"
+msgstr "Cache Ändern"
+
+#: main.py:214
+msgid "TODO: Implement cache property modification"
+msgstr "TODO: Implementierung der Änderung an der Cache-Eigenschaft anfordern"
+
+#: main.py:233
+msgid "Remove Application"
+msgstr "Anwendung entfernen"
+
+#: main.py:237
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: main.py:272
+msgid "Never"
+msgstr "Nie"
+
+#: main.py:257 main.py:264 main.py:469
+msgid "Not found"
+msgstr "Nicht gefunden"
+
+#: main.py:481
+msgid "Error"
+msgstr "Fehler"
+
+#: main.py:488 main.py:686 main.py:716
+msgid "No Selection"
+msgstr "Keine Auswahl"
+
+#: main.py:488
+msgid "Please select an application to backup."
+msgstr "Bitte wählen Sie eine Anwendung zur Backup-Zuverlässigkeit aus."
+
+#: main.py:514
+msgid "Backup Successful"
+msgstr "Sicherung erfolgreich"
+
+#: main.py:256
+msgid ""
+"Backup created for: {0}\n"
+"\n"
+"Location: {1}"
+msgstr ""
+"Sicherung erstellt für: {0}\n"
+"\n"
+"Ort: {1}"
+
+#: main.py:520
+msgid "Backup Failed"
+msgstr "Backup fehlgeschlagen"
+
+#: main.py:521
+msgid ""
+"Failed to create backup for: {}\n"
+"\n"
+"Make sure the cache file exists and is accessible."
+msgstr ""
+"Für folgenden Cache konnte keine Sicherung erstellt werden: {}\n"
+"\n"
+"Stellen Sie sicher, dass das Cachepdate existiert und zugänglich ist."
+
+#: main.py:669 main.py:698
+msgid "Invalid Input"
+msgstr "Ungültiger Eingang"
+
+#: main.py:669 main.py:698
+msgid "All fields are required."
+msgstr "Alle Felder sind erforderlich."
+
+#: main.py:686
+msgid "Please select an application to edit."
+msgstr "Bitte wählen Sie eine Anwendung aus, um sie zu bearbeiten."
+
+#: main.py:716
+msgid "Please select an application to remove."
+msgstr "Bitte wählen Sie eine Anwendung, um sie zu entfernen."
+
+#: main.py:721
+msgid "Confirm Removal"
+msgstr "Entfernung bestätigen"
+
+#: main.py:722
+msgid "Are you sure you want to remove the selected application?"
+msgstr ""
+"Sind Sie sicher, dass Sie die ausgewählte Anwendung entfernen möchten?"
+
+#: cache_manager/cache_backup_manager.py:90
+msgid "Backup verification failed: {0}. Removing failed backup file."
+msgstr ""
+"Die Sicherheitsübereinstimmung ist fehlgeschlagen: {0}. Das nicht "
+"erfolgreiche Sicherungsfile wird entfernt."
+
+#: cache_manager/cache_backup_manager.py:79
+msgid "Error creating backup: {}"
+msgstr "Fehler beim Erstellen des Backups: {}"
+
+#: cache_manager/cache_backup_manager.py:170
+#: cache_manager/cache_backup_manager.py:187
+msgid "Error reading backup metadata: {}"
+msgstr "Fehler beim Lesen der Sicherungsmetadaten: {}"
+
+#: utils/app_info_cache.py:35
+msgid "Error storing cache: {}"
+msgstr "Fehler beim Speichern des Caches: {}"
+
+#: utils/app_info_cache.py:110
+msgid "Error loading cache: {}"
+msgstr "Fehler beim Laden des Caches: {}"
+
+#: utils/translations.py:37
+msgid "Monday"
+msgstr "Montag"
+
+#: utils/translations.py:39
+msgid "Tuesday"
+msgstr "Dienstag"
+
+#: utils/translations.py:41
+msgid "Wednesday"
+msgstr "Mittwoch"
+
+#: utils/translations.py:43
+msgid "Thursday"
+msgstr "Donnerstag"
+
+#: utils/translations.py:45
+msgid "Friday"
+msgstr "Freitag"
+
+#: utils/translations.py:47
+msgid "Saturday"
+msgstr "Samstag"
+
+#: utils/translations.py:49
+msgid "Sunday"
+msgstr "Sonntag"
+
+#: utils/translations.py:61
+msgid "seconds"
+msgstr "Sekunden"
+
+#: utils/translations.py:63
+msgid "minutes"
+msgstr "Minuten"
+
+#: utils/translations.py:65
+msgid "hours"
+msgstr "Stunden"
+
+#: utils/translations.py:67
+msgid "days"
+msgstr "Tage"
+
+#: utils/translations.py:69
+msgid "weeks"
+msgstr "Wochen"
+
+#: utils/translations.py:71
+msgid "months"
+msgstr "Monate"
+
+#: utils/translations.py:73
+msgid "years"
+msgstr "Jahre"
+
+#: main.py:62
+msgid "Encryption Strategy:"
+msgstr "Encrypting Strategy:"
+
+#: main.py:64 utils/encryption_strategy.py:28
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: main.py:65 utils/encryption_strategy.py:29
+msgid "None"
+msgstr "None"
+
+#: main.py:66 utils/encryption_strategy.py:30
+msgid "Standard"
+msgstr "Standard"
+
+#: main.py:67 utils/encryption_strategy.py:31
+msgid "OQS (Quantum)"
+msgstr "OQS (Quanten)"
+
+#: main.py:159
+msgid "Open Backup Folder"
+msgstr "Sicherungsordner öffnen"
+
+#: main.py:163
+msgid "Set External Backup Path"
+msgstr "Festlegen externen Sicherungs-Pfad"
+
+#: main.py:167
+msgid "Import Recovery Bundle"
+msgstr "Wiederherstellungs-Paket importieren"
+
+#: main.py:171
+msgid "Reset Recovery Password"
+msgstr "Kennwort zurücksetzen – Wiederherstellung"
+
+#: main.py:183
+msgid "Cache Updated"
+msgstr "Cache aktualisiert"
+
+#: main.py:184
+msgid "Last Accessed"
+msgstr "Letzter Zugriff"
+
+#: main.py:186
+msgid "Alert"
+msgstr "Warnung"
+
+#: main.py:188
+msgid "Encryption"
+msgstr "Verschlüsselung"
+
+#: main.py:207
+msgid "Inspect"
+msgstr "Prüfen"
+
+#: main.py:209
+msgid "TODO: Implement cache inspection"
+msgstr "TODO: Caché-Auswertung realisieren"
+
+#: main.py:212
+msgid "Modify"
+msgstr "Ändern"
+
+#: main.py:217
+msgid "Migrate"
+msgstr "Migrieren"
+
+#: main.py:219
+msgid "TODO: Implement cache migration to switch encryption keys and strategy"
+msgstr ""
+"TODO: Implementieren Sie den Cache-Migrationsprozess, um die "
+"Verschlüsselungsschlüssel und Strategie zu ändern"
+
+#: main.py:385
+msgid "Unable to Open Backup Folder"
+msgstr "Kann nicht die Sicherungsordner öffnen"
+
+#: main.py:386
+msgid "Failed to open backup folder: {0}"
+msgstr "Fehler beim Öffnen des  Sicherungs-Ordners: {0}"
+
+#: main.py:394
+msgid "Select External Backup Folder"
+msgstr "Externen  Sicherungs-Ordner auswählen"
+
+#: main.py:405
+msgid "External Backup Path Updated"
+msgstr "Der Externe Sicherungs-/Überleitweg wurde aktualisiert."
+
+#: main.py:406
+msgid ""
+"External backup path set to:\n"
+"{0}"
+msgstr ""
+"Externer  Sicherungs-Pfad festgelegt auf:\n"
+"{0}"
+
+#: main.py:412
+msgid "Backup Folder: {0}"
+msgstr "Sicherungsvorlagenordner: {0}"
+
+#: main.py:495
+msgid "Recovery Passphrase Required"
+msgstr "Die Wiederherstellungskennwort ist erforderlich."
+
+#: main.py:496
+msgid "A recovery passphrase is required before backups can proceed."
+msgstr ""
+"Eine Wiederherstellungskennwort ist erforderlich, bevor die Sicherungen "
+"durchgeführt werden können."
+
+#: main.py:515
+msgid ""
+"Backup created for: {0}\n"
+"\n"
+"Written to:\n"
+"{1}"
+msgstr ""
+"Sicherung erstellt für: {0}\n"
+"\n"
+"Geschrieben an:\n"
+"{1}"
+
+#: main.py:536
+msgid "Set Recovery Passphrase"
+msgstr "Legt die Wiederherstellungs-Kennwort fest."
+
+#: main.py:537
+msgid "Create a passphrase for encrypted recovery bundles:"
+msgstr ""
+"Erstellen Sie einen Passsatz für verschlüsselte Wiederherstellungsbündel."
+
+#: main.py:545
+msgid "Confirm Recovery Passphrase"
+msgstr "Wiederherstellungskennwort bestätigen"
+
+#: main.py:546
+msgid "Re-enter recovery passphrase:"
+msgstr "Wiederholen der Wiederherstellungskennwort:"
+
+#: main.py:550 main.py:595
+msgid "Passphrase Mismatch"
+msgstr "Kennwortenfehler"
+
+#: main.py:550 main.py:595
+msgid "Recovery passphrase confirmation did not match."
+msgstr ""
+"Die Wiederherstellung der Kennwortenbestätigung hat nicht übereinstimmen "
+"können."
+
+#: main.py:568
+msgid "Recovery bundle export completed with errors: {0}"
+msgstr "Wiederherstellung-Paket-Export mit Fehlern abgeschlossen: {0}"
+
+#: main.py:573
+msgid "Recovery Bundle Export Failed"
+msgstr "Wiederherstellungspaketexport fehlgeschlagen"
+
+#: main.py:574
+msgid ""
+"Backups were created, but recovery bundle export failed:\n"
+"{0}"
+msgstr ""
+"Es wurden Sicherungen erstellt, aber der Export des Wiederherstellungs-Bundles ist fehlgeschlagen:\n"
+"{0}"
+
+#: main.py:581
+msgid "Reset Recovery Passphrase"
+msgstr "Zurücksetzen der Wiederherstellungskennwort"
+
+#: main.py:582
+msgid "Enter new recovery passphrase:"
+msgstr "Geben Sie eine neue Wiederherstellungskennwort ein."
+
+#: main.py:590
+msgid "Confirm New Recovery Passphrase"
+msgstr "Bestätigung der neuen Wiederherstellungskennwort"
+
+#: main.py:591
+msgid "Re-enter new recovery passphrase:"
+msgstr "Geben Sie die neue Wiederherstellungskennwort erneut ein."
+
+#: main.py:603
+msgid "Recovery Passphrase Reset"
+msgstr "Wiederherstellungskennwort zurücksetzen"
+
+#: main.py:604
+msgid "Recovery passphrase was updated and recovery bundle was re-exported."
+msgstr ""
+"Die Wiederherstellungskennwort wurde aktualisiert und das "
+"Wiederherstellungsbundle wurde erneut exportiert."
+
+#: main.py:609
+msgid "Recovery Passphrase Reset Failed"
+msgstr "Wiederherstellung-Kennwort-Zurücksetzen fehlgeschlagen"
+
+#: main.py:610
+msgid ""
+"Failed to reset recovery passphrase:\n"
+"{0}"
+msgstr ""
+"Das Zurücksetzen der Wiederherstellungskennwort ist fehlgeschlagen:\n"
+"{0}"
+
+#: main.py:618
+msgid "Select Recovery Bundle"
+msgstr "Wiederherstellungs-Paket auswählen"
+
+#: main.py:620
+msgid "Encrypted Bundle (*.enc);;All Files (*)"
+msgstr "Verschlüsselte Sammlung (*.enc);; Alle Dateien (*)"
+
+#: main.py:627
+msgid "Recovery Bundle Passphrase"
+msgstr "Wiederherstellungsbündelkennwort"
+
+#: main.py:628
+msgid "Enter passphrase for this recovery bundle:"
+msgstr "Geben Sie die Passphrase für dieses Wiederherstellungsbundle ein:"
+
+#: main.py:636
+msgid "Overwrite Existing Keys?"
+msgstr "Überschreiben bestehende Schlüssel?"
+
+#: main.py:637
+msgid "Overwrite existing key material for matching apps?"
+msgstr "Überschreiben des existierenden Schlüsselmaterials für passende Apps?"
+
+#: main.py:649
+msgid "Recovery Bundle Import Complete"
+msgstr "Wiederherstellungsbündelimport abgeschlossen"
+
+#: main.py:651
+msgid ""
+"Imported: {0}\n"
+"Skipped: {1}\n"
+"Failed: {2}"
+msgstr ""
+"Importiert: {0}\n"
+"Übersprungen: {1}\n"
+"Fehlgeschlagen: {2}"
+
+#: main.py:657
+msgid "Recovery Bundle Import Failed"
+msgstr "Wiederherstellungspaketimport fehlgeschlagen"
+
+#: main.py:658
+msgid ""
+"Failed to import recovery bundle:\n"
+"{0}"
+msgstr ""
+"Fehler beim Importieren des Wiederherstellungspakets:\n"
+"{0}"
+
+#: cache_manager/cache_backup_manager.py:210
+msgid "Removed old backup: {}"
+msgstr "Altes Backup entfernt: {}"
+
+#: cache_manager/cache_backup_manager.py:212
+msgid "Error removing old backup: {}"
+msgstr "Fehler beim Löschen der alten Sicherung: {}"
+
+#: cache_manager/cache_backup_manager.py:223
+msgid "Error updating backup metadata: {}"
+msgstr "Fehler beim Aktualisieren der Backup-Metadaten: {}"
+
+#: cache_manager/recovery_bundle_manager.py:49
+msgid "Recovery passphrase cannot be empty."
+msgstr "Die Wiederherstellungskennwort darf nicht leer sein."
+
+#: cache_manager/recovery_bundle_manager.py:64
+msgid "Recovery passphrase is required for bundle export."
+msgstr ""
+"Die Wiederherstellungskennwort ist für den Bündelauslexport erforderlich."
+
+#: cache_manager/recovery_bundle_manager.py:75
+msgid "Failed to export key material for app '{0}': {1}"
+msgstr ""
+"Der Export des Schlüsselmaterials für die Anwendung '{0}' ist gescheitert: "
+"{1}"
+
+#: cache_manager/recovery_bundle_manager.py:114
+msgid "Recovery passphrase is required for bundle import."
+msgstr ""
+"Die Wiederherstellungskennwort ist für den Bundle-Import erforderlich."
+
+#: cache_manager/recovery_bundle_manager.py:125
+msgid "Invalid recovery bundle format."
+msgstr "Ungültiges Wiederherstellungspaket-Format."
+
+#: cache_manager/recovery_bundle_manager.py:131
+msgid "Recovery bundle integrity check failed."
+msgstr ""
+"Der Integritätscheck des Wiederherstellungs-Bündels ist fehlgeschlagen."
+
+#: cache_manager/recovery_bundle_manager.py:135
+msgid "Unsupported recovery bundle schema version: {0}"
+msgstr ""
+"Die nicht unterstützte Schemasversion des Wiederherstellungspakets: {0}"
+
+#: cache_manager/recovery_bundle_manager.py:160
+msgid "Failed to import recovery material for '{0}': {1}"
+msgstr ""
+"Erfolglos bei der Importierung des Wiederherstellungsmateriales für '{0}': "
+"{1}"
+
+#: cache_manager/recovery_bundle_manager.py:174
+msgid "Missing service/app identifier in application config."
+msgstr "Fehlt Dienst-/Anwendungsinformation in der Anwendungs-Konfiguration."
+
+#: cache_manager/recovery_bundle_manager.py:181
+msgid "No stored encryptor type found in keyring."
+msgstr "Keine gespeicherte Verschlüsselungsart im Schlüsselspeicher gefunden."
+
+#: cache_manager/recovery_bundle_manager.py:186
+msgid "Unable to retrieve public key from keyring."
+msgstr "Kann nicht öffentlichen Schlüssel aus dem Schlüsselspeicher abrufen."
+
+#: cache_manager/recovery_bundle_manager.py:213
+msgid "Recovery entry is missing required fields."
+msgstr "Der Wiederherstellungseintrag fehlt erforderliche Felder."
+
+#: cache_manager/recovery_bundle_manager.py:279
+msgid "No backup file found in bundle directory for '{0}'"
+msgstr "Keine Backupdatei im Bundle-Verzeichnis für '{0}' gefunden."
+
+#: cache_manager/recovery_bundle_manager.py:287
+msgid "Imported keys cannot decrypt backup file for '{0}': {1}"
+msgstr ""
+"Importierte Schlüssel können die Sicherheitsdatei für '{0}' nicht ent "
+"entschlüsseln: {1}"
+
+#: cache_manager/recovery_bundle_manager.py:312
+msgid "Quantum key material requires OQS support on this machine."
+msgstr ""
+"Quantis-Schlüsselmaterial erfordert OQS-Unterstützung auf diesem Gerät."
+
+#: cache_manager/recovery_bundle_manager.py:314
+msgid "Unsupported encryptor type: {0}"
+msgstr "Nichtunterstützter Verschlüsselungstyp: {0}"
+
+#: utils/app_info_cache.py:37
+msgid "Error compiling application cache: {}"
+msgstr "Fehler beim Kompilieren des Anwendungs-Caches: {}"
+
+#: utils/app_info_cache.py:48
+msgid "Error encrypting cache: {}"
+msgstr "Fehler beim Verschlüsseln des Caches: {}"
+
+#: utils/app_info_cache.py:55
+msgid "Error storing application cache: {}"
+msgstr "Fehler beim Speichern des Anwendungs-Caches: {}"
+
+#: utils/app_info_cache.py:71
+msgid ""
+"Detected JSON-format application cache, will attempt migration to encrypted "
+"store"
+msgstr ""
+"Erkannt JSON-Format-Anwendungs-Cache, wird versuchen, migrieren zu lassen "
+"nach einem verschlüsselten Speicher"
+
+#: utils/app_info_cache.py:75
+msgid "Migrated application cache from {} to encrypted store"
+msgstr ""
+"Der Anwendungs-Cache wurde von {} nach einem verschlüsselten Speicher "
+"migriert"
+
+#: utils/app_info_cache.py:78
+msgid "Encrypted store of application cache failed; keeping JSON cache file"
+msgstr ""
+"Der verschlüsselte Speicher des Anwendungs-Caches hat nicht funktioniert; "
+"das JSON-Cache-Datei wird behalten"
