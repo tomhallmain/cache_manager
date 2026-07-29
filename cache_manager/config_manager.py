@@ -2,10 +2,9 @@ import os
 
 from utils.app_info_cache import app_info_cache
 from utils.logging_setup import get_logger
-from utils.translations import I18N
+from utils.translations import _
 
 logger = get_logger(__name__)
-_ = I18N._
 
 
 class ConfigManager:

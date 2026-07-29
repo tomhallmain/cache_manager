@@ -22,11 +22,10 @@ from utils.encryptor import (
     namespaced_key,
 )
 from utils.logging_setup import get_logger
-from utils.translations import I18N
+from utils.translations import _
 from cache_manager.cache_backup_manager import sanitize_filename
 
 logger = get_logger(__name__)
-_ = I18N._
 
 
 class RecoveryBundleManager:

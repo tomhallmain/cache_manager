@@ -14,12 +14,11 @@ from cache_manager.config_manager import ConfigManager
 from cache_manager.cache_backup_manager import CacheBackupManager
 from cache_manager.recovery_bundle_manager import RecoveryBundleManager
 from utils.logging_setup import get_logger
-from utils.translations import I18N
+from utils.translations import _
 from utils.encryption_strategy import EncryptionStrategy
 from utils.utils import Utils
 
 logger = get_logger(__name__)
-_ = I18N._
 
 
 class AddEditApplicationDialog(QDialog):

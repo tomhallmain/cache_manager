@@ -13,9 +13,24 @@ def test_cache_paths_are_isolated_from_repo(isolated_singletons):
     assert os.path.dirname(cache._cache_loc) == os.path.normpath(cache_dir_env)
     assert os.path.dirname(cache._json_loc) == os.path.normpath(cache_dir_env)
     assert cache._cache_loc != AppInfoCache.CACHE_LOC
-    assert not os.path.exists(AppInfoCache.CACHE_LOC), (
-        "Test run must never touch the real app_info_cache.enc"
-    )
+
+    # The real app_info_cache.enc may legitimately already exist from actual,
+    # non-test use of the app -- that's expected. What must never happen is
+    # this test run touching it, so compare its state rather than assume
+    # it's absent.
+    real_path = AppInfoCache.CACHE_LOC
+    before = os.stat(real_path) if os.path.exists(real_path) else None
+
+    AppInfoCache()  # exercise construction again within this (isolated) test
+
+    after = os.stat(real_path) if os.path.exists(real_path) else None
+    if before is None:
+        assert after is None, "Test run must never create the real app_info_cache.enc"
+    else:
+        assert after is not None
+        assert (before.st_mtime, before.st_size) == (after.st_mtime, after.st_size), (
+            "Test run must never modify the real app_info_cache.enc"
+        )
 
 
 def test_self_registers_cache_manager_application(isolated_singletons):

@@ -2,13 +2,14 @@ from PySide6.QtWidgets import QDialog
 
 from main import AddEditApplicationDialog
 from utils.encryption_strategy import EncryptionStrategy
+from utils.translations import _
 
 
 def test_add_dialog_starts_blank(qtbot):
     dialog = AddEditApplicationDialog()
     qtbot.addWidget(dialog)
 
-    assert dialog.windowTitle() == "Add Application"
+    assert dialog.windowTitle() == _("Add Application")
     data = dialog.get_data()
     assert data["name"] == ""
     assert data["service_name"] == ""
@@ -50,7 +51,7 @@ def test_edit_dialog_prefills_existing_application_data(qtbot):
     dialog = AddEditApplicationDialog(app_data=app_data)
     qtbot.addWidget(dialog)
 
-    assert dialog.windowTitle() == "Edit Application"
+    assert dialog.windowTitle() == _("Edit Application")
     assert dialog.get_data() == app_data
 
 

@@ -6,11 +6,10 @@ from typing import Optional
 
 from utils.encryptor import decrypt_data_from_file
 from utils.logging_setup import get_logger
-from utils.translations import I18N
+from utils.translations import _
 from utils.utils import Utils
 
 logger = get_logger(__name__)
-_ = I18N._
 
 
 def sanitize_filename(name: str) -> str:

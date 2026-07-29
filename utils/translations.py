@@ -86,3 +86,10 @@ class I18N:
     Then for each locale once the PO files are set up as desired, run below in the deepest locale directory to produce the MO file from the PO file:
         ```python C:\\Python310\\Tools\\i18n\\msgfmt.py -o base.mo base```
     '''
+
+
+# Importable directly (`from utils.translations import _`) instead of every
+# caller repeating `from utils.translations import I18N` + `_ = I18N._`.
+# Still resolves through I18N.translate at call time, so install_locale()
+# continues to affect it everywhere.
+_ = I18N._

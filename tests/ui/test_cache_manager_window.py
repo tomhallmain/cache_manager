@@ -1,6 +1,7 @@
 import os
 
 from main import CacheManagerWindow
+from utils.translations import _
 
 
 def test_window_constructs_and_lists_only_self_registered_app(qtbot, isolated_singletons):
@@ -8,7 +9,7 @@ def test_window_constructs_and_lists_only_self_registered_app(qtbot, isolated_si
     qtbot.addWidget(window)
     window.refresh_timer.stop()
 
-    assert window.windowTitle() == "Cache Manager"
+    assert window.windowTitle() == _("Cache Manager")
     apps = window.config_manager.get_applications()
     assert window.apps_table.rowCount() == len(apps)
     assert len(apps) == 1

@@ -9,10 +9,9 @@ from utils.encryptor import encrypt_data_to_file, decrypt_data_from_file
 from utils.encryptor import KeyEncapsulation
 from utils.encryption_strategy import EncryptionStrategy
 from utils.logging_setup import get_logger
-from utils.translations import I18N
+from utils.translations import _
 
 logger = get_logger(__name__)
-_ = I18N._
 
 
 
