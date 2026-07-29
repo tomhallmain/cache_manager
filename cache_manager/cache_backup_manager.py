@@ -21,7 +21,9 @@ def sanitize_filename(name: str) -> str:
 
 class CacheBackupManager:
     def __init__(self, max_backups_per_app: int = 10):
-        self.backup_dir = "backups"
+        # Allows tests (and other callers) to redirect local backups to a
+        # scratch directory instead of the real, repo-relative "backups" dir.
+        self.backup_dir = os.environ.get("CACHE_MANAGER_BACKUPS_DIR") or "backups"
         self.external_backup_dir = None
         self.max_backups_per_app = max_backups_per_app
         os.makedirs(self.backup_dir, exist_ok=True)

@@ -17,6 +17,13 @@ library_data_dir = os.path.join(root_dir, "library_data", "data")
 class Config:
     CONFIGS_DIR_LOC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs")
 
+    @staticmethod
+    def resolve_configs_dir():
+        """Resolve the active configs directory, allowing tests (and other
+        callers) to redirect it to a scratch directory via CACHE_MANAGER_CONFIGS_DIR
+        instead of the real, module-level default directory above."""
+        return os.environ.get("CACHE_MANAGER_CONFIGS_DIR") or Config.CONFIGS_DIR_LOC
+
     def __init__(self, config_path=None):
         self.dict = {}
         self.changed_values = set()  # Track which values have been modified
@@ -25,7 +32,8 @@ class Config:
 
         self.debug = False
 
-        configs =  [ f.path for f in os.scandir(Config.CONFIGS_DIR_LOC) if f.is_file() and f.path.endswith(".json") ]
+        self.configs_dir = Config.resolve_configs_dir()
+        configs = [ f.path for f in os.scandir(self.configs_dir) if f.is_file() and f.path.endswith(".json") ]
         self.config_path = config_path
 
         if self.config_path is None:
@@ -37,7 +45,7 @@ class Config:
                     self.config_path = c
 
             if self.config_path is None:
-                self.config_path = os.path.join(Config.CONFIGS_DIR_LOC, "config_example.json")
+                self.config_path = os.path.join(self.configs_dir, "config_example.json")
 
         try:
             self.dict = json.load(open(self.config_path, "r", encoding="utf-8"))
@@ -89,7 +97,7 @@ class Config:
     def save_config(self):
         """Save updated configuration to file"""
         # Create temporary swap file path
-        swap_path = os.path.join(Config.CONFIGS_DIR_LOC, f"config_swap_{int(time.time())}.json")
+        swap_path = os.path.join(self.configs_dir, f"config_swap_{int(time.time())}.json")
         
         # Write to swap file
         try:
@@ -125,10 +133,10 @@ class Config:
     def create_from_example(self):
         """Create a new config.json from config_example.json"""
         try:
-            example_path = os.path.join(Config.CONFIGS_DIR_LOC, "config_example.json")
+            example_path = os.path.join(self.configs_dir, "config_example.json")
             with open(example_path, 'r', encoding='utf-8') as f:
                 self.dict = json.load(f)
-            self.config_path = os.path.join(Config.CONFIGS_DIR_LOC, "config.json")
+            self.config_path = os.path.join(self.configs_dir, "config.json")
             return self.save_config()
         except Exception as e:
             logger.error(f"Failed to create config from example: {e}")

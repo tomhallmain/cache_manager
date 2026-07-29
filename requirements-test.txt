@@ -1,0 +1,5 @@
+# Test dependencies. Install with: pip install -r requirements-test.txt
+# (also requires requirements.txt for the application itself, e.g. PySide6)
+
+pytest>=7.4.0
+pytest-qt>=4.2.0

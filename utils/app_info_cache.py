@@ -24,6 +24,11 @@ class AppInfoCache:
     def __init__(self):
         self._lock = threading.RLock()
         self._cache = {'applications': []}
+        # Allows tests (and other callers) to redirect the cache to a scratch
+        # directory instead of the real, module-level default paths above.
+        _override = os.environ.get("CACHE_MANAGER_CACHE_DIR")
+        self._cache_loc = os.path.join(_override, "app_info_cache.enc") if _override else self.CACHE_LOC
+        self._json_loc = os.path.join(_override, "app_info_cache.json") if _override else self.JSON_LOC
         self.load()
         self.validate()
         self._add_self_to_cache()
@@ -41,14 +46,14 @@ class AppInfoCache:
                     cache_data,
                     AppInfo.SERVICE_NAME,
                     AppInfo.APP_IDENTIFIER,
-                    self.CACHE_LOC
+                    self._cache_loc
                 )
                 return True  # Encryption successful
             except Exception as e:
                 logger.error(_("Error encrypting cache: {}").format(e))
 
             try:
-                with open(self.JSON_LOC, "w", encoding="utf-8") as f:
+                with open(self._json_loc, "w", encoding="utf-8") as f:
                     json.dump(self._cache, f)
                 return False  # Encryption failed, but JSON fallback succeeded
             except Exception as e:
@@ -67,22 +72,22 @@ class AppInfoCache:
         """Load the cache from encrypted file"""
         with self._lock:
             try:
-                if os.path.exists(self.JSON_LOC):
+                if os.path.exists(self._json_loc):
                     logger.info(_("Detected JSON-format application cache, will attempt migration to encrypted store"))
-                    with open(self.JSON_LOC, "r", encoding="utf-8") as f:
+                    with open(self._json_loc, "r", encoding="utf-8") as f:
                         self._cache = json.load(f)
                     if self.store():
-                        logger.info(_("Migrated application cache from {} to encrypted store").format(self.JSON_LOC))
-                        os.remove(self.JSON_LOC)
+                        logger.info(_("Migrated application cache from {} to encrypted store").format(self._json_loc))
+                        os.remove(self._json_loc)
                     else:
                         logger.warning(_("Encrypted store of application cache failed; keeping JSON cache file"))
                     return
 
                 # Try encrypted cache and backups in order
-                cache_paths = [self.CACHE_LOC] + self._get_backup_paths()
+                cache_paths = [self._cache_loc] + self._get_backup_paths()
                 any_exist = any(os.path.exists(path) for path in cache_paths)
                 if not any_exist:
-                    logger.info(f"No cache file found at {AppInfoCache.CACHE_LOC}, creating new cache")
+                    logger.info(f"No cache file found at {self._cache_loc}, creating new cache")
                     return
 
                 for path in cache_paths:
@@ -90,8 +95,8 @@ class AppInfoCache:
                         try:
                             self._cache = self._try_load_cache_from_file(path)
                             # Only shift backups if we loaded from the main file
-                            if path == self.CACHE_LOC:
-                                message = f"Loaded cache from {self.CACHE_LOC}"
+                            if path == self._cache_loc:
+                                message = f"Loaded cache from {self._cache_loc}"
                                 rotated_count = self._rotate_backups()
                                 if rotated_count > 0:
                                     message += f", rotated {rotated_count} backups"
@@ -187,7 +192,7 @@ class AppInfoCache:
                 'name': 'Cache Manager',
                 'service_name': AppInfo.SERVICE_NAME,
                 'app_identifier': AppInfo.APP_IDENTIFIER,
-                'cache_location': self.CACHE_LOC,
+                'cache_location': self._cache_loc,
                 'encryption_strategy': strategy
             })
             self.store()
@@ -197,7 +202,7 @@ class AppInfoCache:
         backup_paths = []
         for i in range(1, self.NUM_BACKUPS + 1):
             index = "" if i == 1 else f"{i}"
-            path = f"{self.CACHE_LOC}.bak{index}"
+            path = f"{self._cache_loc}.bak{index}"
             backup_paths.append(path)
         return backup_paths
 
@@ -217,7 +222,7 @@ class AppInfoCache:
                 rotated_count += 1
         
         # Copy main cache to first backup position
-        shutil.copy2(self.CACHE_LOC, backup_paths[0])
+        shutil.copy2(self._cache_loc, backup_paths[0])
         
         return rotated_count
 
