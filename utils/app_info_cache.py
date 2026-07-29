@@ -112,6 +112,16 @@ class AppInfoCache:
                 pass
             except Exception as e:
                 logger.error(_("Error loading cache: {}").format(str(e)))
+                # Preserve whatever couldn't be decrypted (e.g. a cache file
+                # copied over from a different machine, or corruption) into
+                # the backup chain before falling through to a fresh cache
+                # below -- otherwise it would be silently destroyed with no
+                # way back once _add_self_to_cache() persists a new one.
+                if os.path.exists(self._cache_loc):
+                    try:
+                        self._rotate_backups()
+                    except Exception as backup_error:
+                        logger.error(_("Failed to preserve undecryptable cache before reset: {}").format(str(backup_error)))
                 # If decryption fails, start with empty cache
                 self._cache = {'applications': []}
 

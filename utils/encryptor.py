@@ -156,7 +156,7 @@ class PassphraseManager:
             
             cipher = Cipher(algorithms.AES(key), modes.GCM(nonce, tag), default_backend())
             decryptor = cipher.decryptor()
-            return decryptor.update(ciphertext) + decryptor.finalize()
+            return (decryptor.update(ciphertext) + decryptor.finalize()).decode()
         else:
             # Generate and store new passphrase
             passphrase = os.urandom(32).hex()

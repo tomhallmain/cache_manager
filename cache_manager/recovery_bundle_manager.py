@@ -3,6 +3,7 @@ import glob
 import hashlib
 import json
 import os
+import shutil
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
@@ -137,20 +138,28 @@ class RecoveryBundleManager:
         skipped = 0
         failed = 0
         errors = []
+        cache_restored = 0
+        cache_not_restored = []
 
         bundle_dir = os.path.dirname(os.path.abspath(bundle_path))
         for app_entry in payload.get("applications", []):
             try:
-                status = cls._import_app_entry(
+                key_status, cache_status = cls._import_app_entry(
                     app_entry,
                     overwrite_existing=overwrite_existing,
                     bundle_dir=bundle_dir,
                     restore_cache_file=True,
                 )
-                if status == "imported":
+                if key_status == "imported":
                     imported += 1
                 else:
                     skipped += 1
+
+                if cache_status == "restored":
+                    cache_restored += 1
+                elif cache_status in ("no_backup_found", "target_directory_missing"):
+                    app_name = app_entry.get("name") or app_entry.get("app_identifier") or "unknown"
+                    cache_not_restored.append(app_name)
             except Exception as e:
                 failed += 1
                 app_name = app_entry.get("name") or app_entry.get("app_identifier") or "unknown"
@@ -163,6 +172,8 @@ class RecoveryBundleManager:
             "skipped_count": skipped,
             "failed_count": failed,
             "errors": errors,
+            "cache_restored_count": cache_restored,
+            "cache_not_restored": cache_not_restored,
         }
 
     @classmethod
@@ -204,7 +215,13 @@ class RecoveryBundleManager:
         overwrite_existing: bool = False,
         bundle_dir: Optional[str] = None,
         restore_cache_file: bool = True,
-    ) -> str:
+    ) -> tuple:
+        """
+        Returns (key_status, cache_status):
+          key_status: "imported" or "skipped_existing"
+          cache_status: "restored", "no_backup_found", "target_directory_missing",
+                        or "skipped" (cache restore wasn't attempted)
+        """
         service_name = app_entry.get("service_name")
         app_identifier = app_entry.get("app_identifier")
         encryptor_type = app_entry.get("encryptor_type")
@@ -213,7 +230,7 @@ class RecoveryBundleManager:
 
         existing_type = keyring.get_password(service_name, namespaced_key(app_identifier, ENCRYPTOR_TYPE_KEY))
         if existing_type and not overwrite_existing:
-            return "skipped_existing"
+            return "skipped_existing", "skipped"
 
         if overwrite_existing:
             cls._purge_existing_key_material(service_name, app_identifier)
@@ -239,8 +256,10 @@ class RecoveryBundleManager:
         cls._store_large_data(service_name, app_identifier, encryptor_cls.PUBLIC_KEY, public_key)
 
         cls._verify_imported_key_material(service_name, app_identifier, encryptor_cls, public_key)
+
+        cache_status = "skipped"
         if restore_cache_file:
-            cls._restore_cache_file_if_available(
+            cache_status = cls._restore_cache_file_if_available(
                 app_entry=app_entry,
                 encryptor_cls=encryptor_cls,
                 service_name=service_name,
@@ -250,7 +269,7 @@ class RecoveryBundleManager:
 
         cache_key = f"{service_name}:::{app_identifier}"
         ENCRYPTOR_CLASSES.pop(cache_key, None)
-        return "imported"
+        return "imported", cache_status
 
     @classmethod
     def _verify_imported_key_material(cls, service_name: str, app_identifier: str, encryptor_cls, public_key: bytes):
@@ -266,17 +285,34 @@ class RecoveryBundleManager:
         service_name: str,
         app_identifier: str,
         bundle_dir: Optional[str],
-    ):
-        """Restore latest matching backup file to configured cache location and verify decryptability."""
+    ) -> str:
+        """
+        Restore latest matching backup file to configured cache location and
+        verify decryptability. Returns "restored", "no_backup_found", or
+        "target_directory_missing".
+        """
         cache_location = app_entry.get("cache_location")
         app_name = app_entry.get("name")
         if not cache_location or not app_name or not bundle_dir:
-            return
+            return "no_backup_found"
 
         backup_path = cls._find_latest_backup_for_app(bundle_dir, app_name)
         if not backup_path:
             logger.warning(_("No backup file found in bundle directory for '{0}'").format(app_name))
-            return
+            return "no_backup_found"
+
+        cache_dir = os.path.dirname(cache_location)
+        if cache_dir and not os.path.isdir(cache_dir):
+            # cache_location was recorded on the exporting machine; if its
+            # directory doesn't already exist here, this is most likely a
+            # genuinely different computer/install layout. Don't blindly
+            # manufacture a directory tree implied by a foreign machine's path.
+            logger.warning(
+                _("Cache directory for '{0}' does not exist on this machine ({1}); skipping restore.").format(
+                    app_name, cache_dir
+                )
+            )
+            return "target_directory_missing"
 
         private_key = encryptor_cls.load_private_key(service_name, app_identifier)
         try:
@@ -285,22 +321,59 @@ class RecoveryBundleManager:
         except Exception as e:
             raise ValueError(_("Imported keys cannot decrypt backup file for '{0}': {1}").format(app_name, str(e)))
 
-        cache_dir = os.path.dirname(cache_location)
-        if cache_dir:
-            os.makedirs(cache_dir, exist_ok=True)
+        if os.path.exists(cache_location):
+            # Preserve whatever is already there before overwriting it -- it
+            # may predate this recovery and not be recoverable otherwise.
+            shutil.copy2(cache_location, f"{cache_location}.pre_recovery.bak")
+
         with open(backup_path, "rb") as src, open(cache_location, "wb") as dst:
             dst.write(src.read())
 
+        return "restored"
+
     @classmethod
     def _find_latest_backup_for_app(cls, bundle_dir: str, app_name: str) -> Optional[str]:
-        """Find newest backup file for an app based on backup naming convention."""
+        """
+        Find the newest backup file for an app. Prefers the creation
+        timestamps already recorded in {app}_backups.json over filesystem
+        mtime, since copy/zip/cloud-sync tools used to move backups between
+        machines commonly reset or fail to preserve mtimes.
+        """
         safe_name = sanitize_filename(app_name)
         pattern = os.path.join(bundle_dir, f"{safe_name}_*.enc")
         matches = glob.glob(pattern)
         if not matches:
             return None
-        matches.sort(key=os.path.getmtime, reverse=True)
+
+        recorded_timestamps = cls._load_recorded_backup_timestamps(bundle_dir, safe_name)
+
+        def sort_key(path):
+            recorded = recorded_timestamps.get(os.path.basename(path))
+            if recorded:
+                return (1, recorded)
+            return (0, datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc).isoformat())
+
+        matches.sort(key=sort_key, reverse=True)
         return matches[0]
+
+    @staticmethod
+    def _load_recorded_backup_timestamps(bundle_dir: str, safe_name: str) -> Dict[str, str]:
+        """Map backup filename -> recorded ISO timestamp from {app}_backups.json, if present."""
+        metadata_path = os.path.join(bundle_dir, f"{safe_name}_backups.json")
+        if not os.path.isfile(metadata_path):
+            return {}
+        try:
+            with open(metadata_path, "r", encoding="utf-8") as f:
+                metadata = json.load(f)
+        except Exception:
+            return {}
+        timestamps = {}
+        for backup in metadata.get("backups", []):
+            path = backup.get("path")
+            timestamp = backup.get("timestamp")
+            if path and timestamp:
+                timestamps[os.path.basename(path)] = timestamp
+        return timestamps
 
     @staticmethod
     def _resolve_encryptor_class(encryptor_type: str):
