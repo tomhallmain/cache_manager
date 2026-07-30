@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from cache_manager.config_manager import ConfigManager
 from cache_manager.cache_backup_manager import CacheBackupManager
 from cache_manager.recovery_bundle_manager import RecoveryBundleManager
+from cache_manager.key_management_window import KeyManagementWindow
 from utils.logging_setup import get_logger
 from utils.translations import _
 from utils.encryption_strategy import EncryptionStrategy
@@ -213,10 +214,9 @@ class CacheManagerWindow(QMainWindow):
         modify_btn.setToolTip(_("TODO: Implement cache property modification"))
         button_layout.addWidget(modify_btn)
         
-        migrate_btn = QPushButton(_("Migrate"))
-        migrate_btn.setEnabled(False)  # TODO: Implement cache migration
-        migrate_btn.setToolTip(_("TODO: Implement cache migration to switch encryption keys and strategy"))
-        button_layout.addWidget(migrate_btn)
+        key_management_btn = QPushButton(_("Key Management..."))
+        key_management_btn.clicked.connect(self.open_key_management)
+        button_layout.addWidget(key_management_btn)
         
         button_layout.addStretch()
         
@@ -608,6 +608,12 @@ class CacheManagerWindow(QMainWindow):
                 _("Recovery Passphrase Reset Failed"),
                 _("Failed to reset recovery passphrase:\n{0}").format(str(e)),
             )
+
+    def open_key_management(self):
+        """Open the key management window (inspect + rotate keys). Non-modal,
+        since checking key health and working in the main window are naturally interleaved."""
+        self._key_management_window = KeyManagementWindow(self, self.config_manager, self.backup_manager, parent=self)
+        self._key_management_window.show()
 
     def import_recovery_bundle(self):
         """Import a recovery bundle from disk and rehydrate key material."""

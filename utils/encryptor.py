@@ -38,6 +38,11 @@ def get_key_base(app_identifier, key, encryptor_type=None):
 # =============================================================================
 
 class PassphraseManager:
+    # Tests flip this off. keyring.set_keyring() fakes out the keyring
+    # package, but the native ACL-hardening calls below (win32cred, dbus)
+    # talk to the real OS credential store directly and bypass it entirely.
+    ENABLE_NATIVE_ACL_HARDENING = True
+
     @staticmethod
     def get_passphrase(service_name="MyApp", app_identifier="main_app"):
         """
@@ -68,19 +73,22 @@ class PassphraseManager:
             # Generate and store new passphrase
             passphrase = os.urandom(32).hex()
             keyring.set_password(service_name, key, passphrase)
-            
+
             # Lock down permissions (Windows specific)
-            try:
-                import win32security
-                import win32cred
-                cred = win32cred.CredRead(f"{service_name}/{app_identifier}", 
-                                         win32cred.CRED_TYPE_GENERIC, 0)
-                sd = win32security.SECURITY_DESCRIPTOR()
-                sd.SetSecurityDescriptorOwner(win32security.LookupAccountName(None, os.getlogin())[0], True)
-                win32cred.CredWrite(cred, win32cred.CRED_PRESERVE_CREDENTIAL_BLOB)
-            except ImportError:
-                pass  # Fallback if pywin32 not available
-        
+            if PassphraseManager.ENABLE_NATIVE_ACL_HARDENING:
+                try:
+                    import win32security
+                    import win32cred
+                    cred = win32cred.CredRead(f"{service_name}/{app_identifier}",
+                                             win32cred.CRED_TYPE_GENERIC, 0)
+                    sd = win32security.SECURITY_DESCRIPTOR()
+                    sd.SetSecurityDescriptorOwner(win32security.LookupAccountName(None, os.getlogin())[0], True)
+                    win32cred.CredWrite(cred, win32cred.CRED_PRESERVE_CREDENTIAL_BLOB)
+                except ImportError:
+                    pass  # pywin32 not available
+                except Exception as e:
+                    print(f"Failed to apply Windows credential ACL hardening: {e}")
+
         return passphrase
 
     @staticmethod
@@ -92,21 +100,24 @@ class PassphraseManager:
         if not passphrase:
             passphrase = os.urandom(32).hex()
             keyring.set_password(service_name, key, passphrase)
-            
+
             # Set keychain item ACL (requires PyObjC Foundation/Security)
-            try:
-                from Foundation import NSBundle
-                from Security import kSecAttrAccessible, kSecAttrAccessGroup
-                keyring.set_keyring_properties(
-                    label=f"{service_name} Passphrase",
-                    accessible=kSecAttrAccessible.AccessibleWhenUnlockedThisDeviceOnly,
-                    access_group=NSBundle.mainBundle().bundleIdentifier()
-                )
-            except ImportError:
-                pass  # PyObjC Foundation/Security not installed
-            except AttributeError:
-                pass  # keyring.set_keyring_properties not available
-        
+            if PassphraseManager.ENABLE_NATIVE_ACL_HARDENING:
+                try:
+                    from Foundation import NSBundle
+                    from Security import kSecAttrAccessible, kSecAttrAccessGroup
+                    keyring.set_keyring_properties(
+                        label=f"{service_name} Passphrase",
+                        accessible=kSecAttrAccessible.AccessibleWhenUnlockedThisDeviceOnly,
+                        access_group=NSBundle.mainBundle().bundleIdentifier()
+                    )
+                except ImportError:
+                    pass  # PyObjC Foundation/Security not installed
+                except AttributeError:
+                    pass  # keyring.set_keyring_properties not available
+                except Exception as e:
+                    print(f"Failed to apply macOS keychain ACL hardening: {e}")
+
         return passphrase
 
     @staticmethod
@@ -118,16 +129,19 @@ class PassphraseManager:
         if not passphrase:
             passphrase = os.urandom(32).hex()
             keyring.set_password(service_name, key, passphrase)
-            
+
             # Lock down keyring permissions
-            try:
-                import dbus
-                bus = dbus.SessionBus()
-                service = bus.get_object('org.freedesktop.secrets', '/org/freedesktop/secrets')
-                service.Lock([f"/org/freedesktop/secrets/collection/{service_name}"])
-            except ImportError:
-                pass  # Fallback if dbus not available
-        
+            if PassphraseManager.ENABLE_NATIVE_ACL_HARDENING:
+                try:
+                    import dbus
+                    bus = dbus.SessionBus()
+                    service = bus.get_object('org.freedesktop.secrets', '/org/freedesktop/secrets')
+                    service.Lock([f"/org/freedesktop/secrets/collection/{service_name}"])
+                except ImportError:
+                    pass  # dbus not available
+                except Exception as e:
+                    print(f"Failed to apply Linux Secret Service ACL hardening: {e}")
+
         return passphrase
 
     @staticmethod
@@ -363,30 +377,28 @@ class BaseEncryptor:
             return pub_key
         
         print(f"Generating new keys for {service_name}:{app_identifier}")
-
-        # Generate new keys
         pub_key, priv_key = cls.generate_keypair()
+        cls.store_key_pair(service_name, app_identifier, pub_key, priv_key)
+        return pub_key
+
+    @classmethod
+    def store_key_pair(cls, service_name: str, app_identifier: str, public_key: bytes, private_key: bytes):
+        """Wrap and store an already-generated keypair (used directly by key rotation)."""
         salt = os.urandom(16)
         passphrase = PassphraseManager.get_passphrase(service_name, app_identifier)
         storage_key = cls._derive_key(passphrase, salt, 32)
         nonce = os.urandom(12)
-        
-        # Encrypt private key
+
         cipher = Cipher(algorithms.AES(storage_key), modes.GCM(nonce), default_backend())
         encryptor = cipher.encryptor()
-        encrypted_priv = encryptor.update(priv_key) + encryptor.finalize()
-        
-        # Store components
+        encrypted_priv = encryptor.update(private_key) + encryptor.finalize()
+
         keyring.set_password(service_name, namespaced_key(app_identifier, cls.SALT_KEY), salt.hex())
         keyring.set_password(service_name, namespaced_key(app_identifier, cls.NONCE_KEY), nonce.hex())
         keyring.set_password(service_name, namespaced_key(app_identifier, cls.TAG_KEY), encryptor.tag.hex())
         keyring.set_password(service_name, namespaced_key(app_identifier, ENCRYPTOR_TYPE_KEY), cls._get_key_type())
-
-        # Store large data using chunking
         cls._store_large_data(service_name, app_identifier, cls.ENCRYPTED_PRIV_KEY, encrypted_priv)
-        cls._store_large_data(service_name, app_identifier, cls.PUBLIC_KEY, pub_key)
-        
-        return pub_key
+        cls._store_large_data(service_name, app_identifier, cls.PUBLIC_KEY, public_key)
 
     @classmethod
     def load_private_key(

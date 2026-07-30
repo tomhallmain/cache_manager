@@ -75,6 +75,14 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
+# utils.encryptor is only importable now that _project_root is on sys.path.
+# See the class comment on ENABLE_NATIVE_ACL_HARDENING for why this needs
+# to be off for the whole test session, same reasoning as the keyring swap
+# above: the native win32cred/dbus calls bypass the keyring package (and
+# therefore the fake backend) entirely.
+from utils.encryptor import PassphraseManager
+PassphraseManager.ENABLE_NATIVE_ACL_HARDENING = False
+
 _src_example = os.path.join(_project_root, "configs", "config_example.json")
 if os.path.isfile(_src_example):
     # Copied under both names: "config.json" so Config() has an active
